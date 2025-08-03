@@ -10,8 +10,8 @@ func NewPageOptions() *PageOptions {
 
 func (o *PageOptions) WithWebComponent(name string) *PageOptions {
 	return &PageOptions{
-		Scripts: append(o.Scripts, name + ".js"),
-		Styles:  append(o.Styles, name + ".css"),
+		Scripts: append(o.Scripts, name+".js"),
+		Styles:  append(o.Styles, name+".css"),
 	}
 }
 
