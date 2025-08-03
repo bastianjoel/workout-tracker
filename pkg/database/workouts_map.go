@@ -340,7 +340,7 @@ func maxSpeedForSegment(segment gpx.GPXTrackSegment) float64 {
 	ms := segment.MovingData().MaxSpeed
 
 	for _, p := range segment.Points {
-		if n, ok := p.Extensions.GetNode("", "enhanced-speed"); ok {
+		if n, ok := p.Extensions.GetNode("", "speed"); ok {
 			if newMS, err := cast.ToFloat64E(n.Data); err == nil && newMS > ms {
 				ms = newMS
 			}
