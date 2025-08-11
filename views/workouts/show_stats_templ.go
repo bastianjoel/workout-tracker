@@ -88,7 +88,7 @@ func ShowStats(w *database.Workout) templ.Component {
 			data["time"].Data = append(data["time"].Data, p.Time)
 			data["distance"].Data = append(data["distance"].Data, helpers.HumanDistance(ctx, p.TotalDistance))
 			data["duration"].Data = append(data["duration"].Data, p.TotalDuration.Seconds())
-			if _, ok := p.ExtraMetrics["speed"]; !ok {
+			if _, ok := p.ExtraMetrics["speed"]; !ok || p.ExtraMetrics.Get("speed") == 0 {
 				data["speed"].Data = append(data["speed"].Data, cast.ToFloat64(helpers.HumanSpeed(ctx, p.AverageSpeed())))
 			} else {
 				data["speed"].Data = append(data["speed"].Data, cast.ToFloat64(helpers.HumanSpeed(ctx, p.ExtraMetrics.Get("speed"))))
