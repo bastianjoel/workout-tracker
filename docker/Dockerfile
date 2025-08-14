@@ -1,12 +1,12 @@
 FROM node:24-alpine AS frontend
 
-WORKDIR /app
-
 RUN apk --no-cache add make
+
+WORKDIR /app
 
 COPY frontend ./frontend
 RUN cd frontend && \
-    npm ci
+  npm ci
 
 COPY Makefile ./
 COPY assets ./assets
@@ -14,7 +14,7 @@ COPY views ./views
 
 RUN make build-frontend
 
-FROM golang:1.24.5-alpine AS backend
+FROM golang:1.24.6-alpine AS backend
 ARG BUILD_TIME
 ARG GIT_COMMIT
 ARG GIT_REF

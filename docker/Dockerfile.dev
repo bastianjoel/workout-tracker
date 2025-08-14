@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY frontend ./frontend
 RUN cd frontend && \
-    npm ci
+  npm ci
 
 COPY Makefile ./
 COPY assets ./assets
@@ -15,7 +15,7 @@ COPY views ./views
 WORKDIR /app/frontend
 ENTRYPOINT ["npm", "run", "dev"]
 
-FROM golang:1.24.1-alpine AS builder-backend
+FROM golang:1.24.6-alpine AS builder-backend
 ARG BUILD_TIME
 ARG GIT_COMMIT
 ARG GIT_REF
@@ -37,4 +37,5 @@ COPY vendor ./vendor
 COPY views ./views
 COPY translations ./translations
 
+ENV CGO_ENABLED=0
 ENTRYPOINT ["make", "dev-backend"]
