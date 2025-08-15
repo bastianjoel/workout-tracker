@@ -2,8 +2,29 @@ class WorkoutBreakdown extends HTMLElement {
   constructor() {
     super();
 
-    this.mapElement = document.getElementById(this.getAttribute("map-id"));
     this.activeItem = null;
+
+    this.mapEl = document.getElementById(this.getAttribute("map-id"));
+    this.chartEl = document.getElementById(this.getAttribute("workout-stats"));
+
+    this.data = JSON.parse(
+      document.getElementById(this.getAttribute("data-el")).textContent,
+    );
+    this.preferredUnits = JSON.parse(
+      document.getElementById(this.getAttribute("preferred-units-el"))
+        .textContent,
+    );
+
+    this.availableMetrics = {
+      time: "",
+      distance: this.preferredUnits.distance,
+      duration: "",
+      speed: this.preferredUnits.speed,
+      elevation: this.preferredUnits.elevation,
+      "heart-rate": this.preferredUnits.heartRate,
+      cadence: this.preferredUnits.cadence,
+      temperature: this.preferredUnits.temperature,
+    };
   }
 
   connectedCallback() {
@@ -12,6 +33,8 @@ class WorkoutBreakdown extends HTMLElement {
       item.addEventListener("mouseout", this.itemMouseOut.bind(this));
       item.addEventListener("click", () => this.itemClick(item));
     });
+
+    this.render();
   }
 
   itemClick(item) {
@@ -24,13 +47,13 @@ class WorkoutBreakdown extends HTMLElement {
 
   itemMouseOver(item) {
     if (!this.activeItem) {
-      this.mapElement.setMarker(item);
+      this.mapEl.setMarker(item);
     }
   }
 
   itemMouseOut() {
     if (!this.activeItem) {
-      this.mapElement.clearMarker();
+      this.mapEl.clearMarker();
     }
   }
 
@@ -41,12 +64,40 @@ class WorkoutBreakdown extends HTMLElement {
 
     this.activeItem = item;
     if (this.activeItem) {
-      this.mapElement.scrollIntoView({ behavior: `smooth` });
+      this.mapEl.scrollIntoView({ behavior: `smooth` });
       this.activeItem.classList.add(`active`);
-      this.mapElement.setMarker(this.activeItem);
+      this.mapEl.setMarker(this.activeItem);
     } else {
-      this.mapElement.clearMarker();
+      this.mapEl.clearMarker();
     }
+  }
+
+  render() {
+    const header = this.renderHeader();
+    this.innerHTML = `
+      <table class="breakdown-table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    `;
+    this.querySelector("thead").appendChild(header);
+  }
+
+  renderHeader() {
+    const header = document.createElement("tr");
+    header.classList.add("breakdown-header");
+
+    console.log("Available Metrics:", this.availableMetrics);
+    for (const metric of Object.keys(this.availableMetrics)) {
+      if (this.data[metric] !== undefined) {
+        const col = this.data[metric].Label;
+        if (col) {
+          header.appendChild(document.createElement("th")).textContent = col;
+        }
+      }
+    }
+
+    return header;
   }
 }
 
