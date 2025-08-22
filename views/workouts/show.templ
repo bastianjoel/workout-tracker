@@ -13,6 +13,7 @@ templ Show(w *database.Workout) {
 			WithSharing(),
 	) {
 		{{ currentUser := helpers.CurrentUser(ctx) }}
+		@DataJson(w)
 		<div class="gap-4">
 			if w.User.ID == currentUser.ID {
 				<span class="float-right actions">
@@ -71,7 +72,7 @@ templ Show(w *database.Workout) {
 			}
 		</div>
 		if w.Details() != nil {
-			<div class="inner-form h-[300px] md:h-[500px] print:hidden">
+			<div class="inner-form print:hidden">
 				<h3>
 					<span>
 						@helpers.IconFor("speed")
