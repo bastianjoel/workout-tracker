@@ -17,6 +17,16 @@ func (a *App) registerAPIV2EquipmentRoutes(apiGroup *echo.Group) {
 }
 
 // apiV2EquipmentHandler returns a paginated list of equipment for the current user
+// @Summary      List equipment
+// @Description  Returns a paginated list of equipment (shoes, bikes, etc.) for the current user
+// @Tags         equipment
+// @Produce      json
+// @Param        page     query      int  false  "Page number" default(1)
+// @Param        per_page query      int  false  "Items per page" default(20)
+// @Success      200  {object}  api.PaginatedResponse[api.EquipmentResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /equipment [get]
 func (a *App) apiV2EquipmentHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -59,6 +69,14 @@ func (a *App) apiV2EquipmentHandler(c echo.Context) error {
 }
 
 // apiV2EquipmentGetHandler returns a single equipment by ID
+// @Summary      Get equipment details
+// @Description  Returns detailed information about a specific equipment item
+// @Tags         equipment
+// @Produce      json
+// @Param        id   path      int  true  "Equipment ID"
+// @Success      200  {object}  api.Response[api.EquipmentResponse]
+// @Failure      404  {object}  api.Response[any]
+// @Router       /equipment/{id} [get]
 func (a *App) apiV2EquipmentGetHandler(c echo.Context) error {
 	e, err := a.getEquipment(c)
 	if err != nil {
@@ -73,6 +91,16 @@ func (a *App) apiV2EquipmentGetHandler(c echo.Context) error {
 }
 
 // apiV2EquipmentCreateHandler creates a new equipment
+// @Summary      Create equipment
+// @Description  Creates a new equipment item
+// @Tags         equipment
+// @Accept       json
+// @Produce      json
+// @Param        equipment body      database.Equipment  true  "Equipment data"
+// @Success      201  {object}  api.Response[api.EquipmentResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /equipment [post]
 func (a *App) apiV2EquipmentCreateHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -95,6 +123,19 @@ func (a *App) apiV2EquipmentCreateHandler(c echo.Context) error {
 }
 
 // apiV2EquipmentUpdateHandler updates an existing equipment
+// @Summary      Update equipment
+// @Description  Updates an existing equipment item
+// @Tags         equipment
+// @Accept       json
+// @Produce      json
+// @Param        id        path      int                 true  "Equipment ID"
+// @Param        equipment body      database.Equipment  true  "Equipment data"
+// @Success      200  {object}  api.Response[api.EquipmentResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      403  {object}  api.Response[any]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /equipment/{id} [put]
 func (a *App) apiV2EquipmentUpdateHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -128,6 +169,16 @@ func (a *App) apiV2EquipmentUpdateHandler(c echo.Context) error {
 }
 
 // apiV2EquipmentDeleteHandler deletes an equipment
+// @Summary      Delete equipment
+// @Description  Permanently deletes an equipment item
+// @Tags         equipment
+// @Produce      json
+// @Param        id   path      int  true  "Equipment ID"
+// @Success      204
+// @Failure      403  {object}  api.Response[any]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /equipment/{id} [delete]
 func (a *App) apiV2EquipmentDeleteHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 

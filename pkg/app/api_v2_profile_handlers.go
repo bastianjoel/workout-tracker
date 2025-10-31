@@ -18,6 +18,12 @@ func (a *App) registerAPIV2ProfileRoutes(apiGroup *echo.Group) {
 }
 
 // apiV2ProfileHandler returns current user's full profile with settings
+// @Summary      Get user profile
+// @Description  Returns the current user's complete profile including all settings and preferences
+// @Tags         profile
+// @Produce      json
+// @Success      200  {object}  api.Response[api.UserProfileResponse]
+// @Router       /profile [get]
 func (a *App) apiV2ProfileHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -34,6 +40,15 @@ func (a *App) apiV2ProfileHandler(c echo.Context) error {
 }
 
 // apiV2ProfileUpdateHandler updates current user's profile
+// @Summary      Update user profile
+// @Description  Updates the current user's profile settings and preferences
+// @Tags         profile
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  api.Response[api.UserProfileResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /profile [put]
 func (a *App) apiV2ProfileUpdateHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -82,6 +97,13 @@ func (a *App) apiV2ProfileUpdateHandler(c echo.Context) error {
 }
 
 // apiV2ProfileResetAPIKeyHandler resets current user's API key
+// @Summary      Reset API key
+// @Description  Generates a new API key for the current user, invalidating the old one
+// @Tags         profile
+// @Produce      json
+// @Success      200  {object}  api.Response[map[string]string]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /profile/reset-api-key [post]
 func (a *App) apiV2ProfileResetAPIKeyHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -102,6 +124,13 @@ func (a *App) apiV2ProfileResetAPIKeyHandler(c echo.Context) error {
 }
 
 // apiV2ProfileRefreshWorkoutsHandler marks all workouts for refresh
+// @Summary      Refresh all workouts
+// @Description  Marks all workouts of the current user for background refresh
+// @Tags         profile
+// @Produce      json
+// @Success      200  {object}  api.Response[map[string]string]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /profile/refresh-workouts [post]
 func (a *App) apiV2ProfileRefreshWorkoutsHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -119,6 +148,13 @@ func (a *App) apiV2ProfileRefreshWorkoutsHandler(c echo.Context) error {
 }
 
 // apiV2UserUpdateVersion updates the user's last known app version
+// @Summary      Update user version
+// @Description  Records the app version last used by the current user
+// @Tags         profile
+// @Produce      json
+// @Success      200  {string}  string
+// @Failure      500  {string}  string
+// @Router       /profile/update-version [post]
 func (a *App) apiV2UserUpdateVersion(c echo.Context) error {
 	u := a.getCurrentUser(c)
 

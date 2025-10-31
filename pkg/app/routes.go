@@ -179,6 +179,7 @@ func (a *App) ContextValueMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+// @BasePath /api/v2
 func (a *App) apiV2Routes(e *echo.Group) {
 	// Public routes
 	apiGroupPublic := e.Group("/api/v2")
@@ -242,6 +243,12 @@ func (a *App) apiV2Routes(e *echo.Group) {
 }
 
 // apiV2AppInfoHandler returns application information
+// @Summary      Get application information
+// @Description  Returns version, configuration and other app information (public endpoint)
+// @Tags         app
+// @Produce      json
+// @Success      200  {object}  api.Response[api.AppInfoResponse]
+// @Router       /app-info [get]
 func (a *App) apiV2AppInfoHandler(c echo.Context) error {
 	resp := api.Response[api.AppInfoResponse]{
 		Results: api.AppInfoResponse{

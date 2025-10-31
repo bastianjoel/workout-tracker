@@ -31,6 +31,17 @@ func (a *App) registerAPIV2WorkoutRoutes(apiGroup *echo.Group, apiGroupPublic *e
 }
 
 // apiV2WorkoutsHandler returns a paginated list of workouts for the current user
+// @Summary      List workouts
+// @Description  Returns a paginated list of workouts for the current user with optional filters
+// @Tags         workouts
+// @Produce      json
+// @Param        page     query      int     false  "Page number" default(1)
+// @Param        per_page query      int     false  "Items per page" default(20)
+// @Param        type     query      string  false  "Filter by workout type"
+// @Success      200  {object}  api.PaginatedResponse[api.WorkoutResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts [get]
 func (a *App) apiV2WorkoutsHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -80,6 +91,16 @@ func (a *App) apiV2WorkoutsHandler(c echo.Context) error {
 }
 
 // apiV2WorkoutHandler returns a single workout for the current user
+// @Summary      Get workout details
+// @Description  Returns detailed information about a specific workout including all GPS data
+// @Tags         workouts
+// @Produce      json
+// @Param        id   path      int  true  "Workout ID"
+// @Success      200  {object}  api.Response[api.WorkoutDetailResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts/{id} [get]
 func (a *App) apiV2WorkoutHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -119,6 +140,17 @@ type CalendarQueryParams struct {
 }
 
 // apiV2WorkoutsCalendarHandler returns calendar events of workouts for the current user
+// @Summary      Get workout calendar events
+// @Description  Returns workouts formatted as calendar events for the current user
+// @Tags         workouts
+// @Produce      json
+// @Param        start    query      string  false  "Start date-time (2006-01-02T15:04:05)"
+// @Param        end      query      string  false  "End date-time (2006-01-02T15:04:05)"
+// @Param        timeZone query      string  false  "Timezone (e.g. 'America/New_York')"
+// @Success      200  {object}  api.Response[[]api.CalendarEventResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts/calendar [get]
 func (a *App) apiV2WorkoutsCalendarHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -194,6 +226,18 @@ func (a *App) apiV2WorkoutsCalendarHandler(c echo.Context) error {
 }
 
 // apiV2WorkoutCreateHandler creates a new workout (file upload or manual entry)
+// @Summary      Create workout
+// @Description  Creates a new workout from file upload (GPX, TCX, FIT) or manual entry
+// @Tags         workouts
+// @Accept       multipart/form-data,json
+// @Produce      json
+// @Param        file  formData  file    false  "Workout file (GPX, TCX, FIT)"
+// @Param        type  formData  string  false  "Workout type"
+// @Param        notes formData  string  false  "Notes"
+// @Success      201  {object}  api.Response[[]api.WorkoutResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts [post]
 func (a *App) apiV2WorkoutCreateHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -326,6 +370,15 @@ func formatDuration(seconds int64) string {
 }
 
 // apiV2RecentWorkoutsHandler returns recent workouts from all users
+// @Summary      Get recent workouts
+// @Description  Returns recent workouts from all users (for social/feed functionality)
+// @Tags         workouts
+// @Produce      json
+// @Param        limit  query      int  false  "Maximum number of workouts to return (max 100)" default(20)
+// @Param        offset query      int  false  "Offset for pagination" default(0)
+// @Success      200  {object}  api.Response[[]api.WorkoutResponse]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts/recent [get]
 func (a *App) apiV2RecentWorkoutsHandler(c echo.Context) error {
 	// Parse limit parameter (default to 20, max 100)
 	limit := 20
@@ -364,6 +417,15 @@ func (a *App) apiV2RecentWorkoutsHandler(c echo.Context) error {
 }
 
 // apiV2WorkoutDeleteHandler deletes a workout
+// @Summary      Delete workout
+// @Description  Permanently deletes a workout and all associated data
+// @Tags         workouts
+// @Produce      json
+// @Param        id   path      int  true  "Workout ID"
+// @Success      200  {object}  api.Response[map[string]string]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts/{id} [delete]
 func (a *App) apiV2WorkoutDeleteHandler(c echo.Context) error {
 	// Get workout
 	workout, err := a.getWorkout(c)
@@ -384,6 +446,18 @@ func (a *App) apiV2WorkoutDeleteHandler(c echo.Context) error {
 }
 
 // apiV2WorkoutUpdateHandler updates a workout
+// @Summary      Update workout
+// @Description  Updates workout details (name, notes, equipment, etc.)
+// @Tags         workouts
+// @Accept       json
+// @Produce      json
+// @Param        id      path      int            true  "Workout ID"
+// @Param        workout body      ManualWorkout  true  "Workout data"
+// @Success      200  {object}  api.Response[api.WorkoutResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts/{id} [put]
 func (a *App) apiV2WorkoutUpdateHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -426,6 +500,16 @@ func (a *App) apiV2WorkoutUpdateHandler(c echo.Context) error {
 }
 
 // apiV2WorkoutToggleLockHandler toggles the locked status of a workout
+// @Summary      Toggle workout lock
+// @Description  Locks or unlocks a workout to prevent/allow modifications
+// @Tags         workouts
+// @Produce      json
+// @Param        id   path      int  true  "Workout ID"
+// @Success      200  {object}  api.Response[api.WorkoutResponse]
+// @Failure      403  {object}  api.Response[any]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts/{id}/toggle-lock [post]
 func (a *App) apiV2WorkoutToggleLockHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -457,6 +541,15 @@ func (a *App) apiV2WorkoutToggleLockHandler(c echo.Context) error {
 }
 
 // apiV2WorkoutRefreshHandler marks a workout for refresh
+// @Summary      Refresh workout
+// @Description  Marks a workout for background refresh to recalculate all statistics
+// @Tags         workouts
+// @Produce      json
+// @Param        id   path      int  true  "Workout ID"
+// @Success      200  {object}  api.Response[map[string]string]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts/{id}/refresh [post]
 func (a *App) apiV2WorkoutRefreshHandler(c echo.Context) error {
 	workout, err := a.getWorkout(c)
 	if err != nil {
@@ -477,6 +570,15 @@ func (a *App) apiV2WorkoutRefreshHandler(c echo.Context) error {
 }
 
 // apiV2WorkoutShareHandler generates or regenerates a public share link for a workout
+// @Summary      Share workout
+// @Description  Generates or regenerates a public share link for a workout
+// @Tags         workouts
+// @Produce      json
+// @Param        id   path      int  true  "Workout ID"
+// @Success      200  {object}  api.Response[map[string]string]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts/{id}/share [post]
 func (a *App) apiV2WorkoutShareHandler(c echo.Context) error {
 	workout, err := a.getWorkout(c)
 	if err != nil {
@@ -503,6 +605,15 @@ func (a *App) apiV2WorkoutShareHandler(c echo.Context) error {
 }
 
 // apiV2WorkoutShareDeleteHandler deletes the public share link for a workout
+// @Summary      Unshare workout
+// @Description  Removes the public share link for a workout
+// @Tags         workouts
+// @Produce      json
+// @Param        id   path      int  true  "Workout ID"
+// @Success      200  {object}  api.Response[map[string]string]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts/{id}/share [delete]
 func (a *App) apiV2WorkoutShareDeleteHandler(c echo.Context) error {
 	workout, err := a.getWorkout(c)
 	if err != nil {
@@ -525,6 +636,15 @@ func (a *App) apiV2WorkoutShareDeleteHandler(c echo.Context) error {
 }
 
 // apiV2WorkoutDownloadHandler downloads the original workout file
+// @Summary      Download workout file
+// @Description  Downloads the original workout file (GPX, TCX, FIT)
+// @Tags         workouts
+// @Produce      application/octet-stream
+// @Param        id   path      int  true  "Workout ID"
+// @Success      200  {file}    binary
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts/{id}/download [get]
 func (a *App) apiV2WorkoutDownloadHandler(c echo.Context) error {
 	workout, err := a.getWorkout(c)
 	if err != nil {
@@ -549,6 +669,15 @@ func (a *App) apiV2WorkoutDownloadHandler(c echo.Context) error {
 }
 
 // apiV2WorkoutPublicHandler returns a public workout by UUID
+// @Summary      Get public workout
+// @Description  Returns detailed information about a publicly shared workout (no authentication required)
+// @Tags         workouts
+// @Produce      json
+// @Param        uuid path      string  true  "Public UUID"
+// @Success      200  {object}  api.Response[api.WorkoutDetailResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      404  {object}  api.Response[any]
+// @Router       /workouts/public/{uuid} [get]
 func (a *App) apiV2WorkoutPublicHandler(c echo.Context) error {
 	// Parse UUID
 	uuidParam := c.Param("uuid")

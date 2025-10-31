@@ -21,6 +21,13 @@ func (a *App) registerAPIV2AdminRoutes(e *echo.Group) {
 }
 
 // apiV2AdminUsersHandler returns all users (admin only)
+// @Summary      List all users (admin)
+// @Description  Returns a list of all users in the system (admin only)
+// @Tags         admin
+// @Produce      json
+// @Success      200  {object}  api.Response[[]api.UserProfileResponse]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /admin/users [get]
 func (a *App) apiV2AdminUsersHandler(c echo.Context) error {
 	users, err := database.GetUsers(a.db)
 	if err != nil {
@@ -40,6 +47,15 @@ func (a *App) apiV2AdminUsersHandler(c echo.Context) error {
 }
 
 // apiV2AdminUserHandler returns a specific user (admin only)
+// @Summary      Get user details (admin)
+// @Description  Returns detailed information about a specific user (admin only)
+// @Tags         admin
+// @Produce      json
+// @Param        id   path      int  true  "User ID"
+// @Success      200  {object}  api.Response[api.UserProfileResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      404  {object}  api.Response[any]
+// @Router       /admin/users/{id} [get]
 func (a *App) apiV2AdminUserHandler(c echo.Context) error {
 	userID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -59,6 +75,17 @@ func (a *App) apiV2AdminUserHandler(c echo.Context) error {
 }
 
 // apiV2AdminUserUpdateHandler updates a specific user (admin only)
+// @Summary      Update user (admin)
+// @Description  Updates user information including name, username, admin status, and password (admin only)
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "User ID"
+// @Success      200  {object}  api.Response[api.UserProfileResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /admin/users/{id} [put]
 func (a *App) apiV2AdminUserUpdateHandler(c echo.Context) error {
 	userID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -108,6 +135,16 @@ func (a *App) apiV2AdminUserUpdateHandler(c echo.Context) error {
 }
 
 // apiV2AdminUserDeleteHandler deletes a specific user (admin only)
+// @Summary      Delete user (admin)
+// @Description  Permanently deletes a user and all associated data (admin only)
+// @Tags         admin
+// @Produce      json
+// @Param        id   path      int  true  "User ID"
+// @Success      200  {object}  api.Response[any]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /admin/users/{id} [delete]
 func (a *App) apiV2AdminUserDeleteHandler(c echo.Context) error {
 	userID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -131,6 +168,16 @@ func (a *App) apiV2AdminUserDeleteHandler(c echo.Context) error {
 }
 
 // apiV2AdminConfigUpdateHandler updates application config (admin only)
+// @Summary      Update application config (admin)
+// @Description  Updates application-wide configuration settings (admin only)
+// @Tags         admin
+// @Accept       json
+// @Produce      json
+// @Param        config body      database.Config  true  "Configuration data"
+// @Success      200  {object}  api.Response[api.AppInfoResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /admin/config [put]
 func (a *App) apiV2AdminConfigUpdateHandler(c echo.Context) error {
 	var cnf database.Config
 

@@ -25,6 +25,16 @@ func (a *App) registerAPIV2RouteSegmentRoutes(apiGroup *echo.Group) {
 }
 
 // apiV2RouteSegmentsHandler returns a paginated list of route segments
+// @Summary      List route segments
+// @Description  Returns a paginated list of saved route segments
+// @Tags         route-segments
+// @Produce      json
+// @Param        page     query      int  false  "Page number" default(1)
+// @Param        per_page query      int  false  "Items per page" default(20)
+// @Success      200  {object}  api.PaginatedResponse[api.RouteSegmentResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /route-segments [get]
 func (a *App) apiV2RouteSegmentsHandler(c echo.Context) error {
 	// Parse pagination parameters
 	var pagination api.PaginationParams
@@ -65,6 +75,14 @@ func (a *App) apiV2RouteSegmentsHandler(c echo.Context) error {
 }
 
 // apiV2RouteSegmentGetHandler returns a single route segment by ID with full details
+// @Summary      Get route segment details
+// @Description  Returns detailed information about a specific route segment
+// @Tags         route-segments
+// @Produce      json
+// @Param        id   path      int  true  "Route segment ID"
+// @Success      200  {object}  api.Response[api.RouteSegmentDetailResponse]
+// @Failure      404  {object}  api.Response[any]
+// @Router       /route-segments/{id} [get]
 func (a *App) apiV2RouteSegmentGetHandler(c echo.Context) error {
 	rs, err := a.getRouteSegment(c)
 	if err != nil {
@@ -78,6 +96,17 @@ func (a *App) apiV2RouteSegmentGetHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
+// apiV2RouteSegmentCreateHandler creates a new route segment from file upload
+// @Summary      Create route segment
+// @Description  Creates a new route segment from GPX file upload
+// @Tags         route-segments
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        file  formData  file    true  "Route segment file (GPX)"
+// @Param        notes formData  string  false "Notes"
+// @Success      201  {object}  api.Response[api.RouteSegmentsDetailResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Router       /route-segments [post]
 func (a *App) apiV2RouteSegmentCreateHandler(c echo.Context) error {
 	form, err := c.MultipartForm()
 	if err != nil {
@@ -117,6 +146,18 @@ func (a *App) apiV2RouteSegmentCreateHandler(c echo.Context) error {
 }
 
 // apiV2RouteSegmentCreateFromWorkoutHandler creates a route segment from a workout
+// @Summary      Create route segment from workout
+// @Description  Extracts a route segment from an existing workout
+// @Tags         route-segments
+// @Accept       json
+// @Produce      json
+// @Param        id     path      int                                true  "Workout ID"
+// @Param        params body      database.RoutSegmentCreationParams true  "Route segment parameters"
+// @Success      201  {object}  api.Response[api.RouteSegmentDetailResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /workouts/{id}/route-segment [post]
 func (a *App) apiV2RouteSegmentCreateFromWorkoutHandler(c echo.Context) error {
 	workoutID, err := cast.ToUint64E(c.Param("id"))
 	if err != nil {
@@ -151,6 +192,15 @@ func (a *App) apiV2RouteSegmentCreateFromWorkoutHandler(c echo.Context) error {
 }
 
 // apiV2RouteSegmentDeleteHandler deletes a route segment
+// @Summary      Delete route segment
+// @Description  Permanently deletes a route segment
+// @Tags         route-segments
+// @Produce      json
+// @Param        id   path      int  true  "Route segment ID"
+// @Success      200  {object}  api.Response[map[string]string]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /route-segments/{id} [delete]
 func (a *App) apiV2RouteSegmentDeleteHandler(c echo.Context) error {
 	rs, err := a.getRouteSegment(c)
 	if err != nil {
@@ -169,6 +219,15 @@ func (a *App) apiV2RouteSegmentDeleteHandler(c echo.Context) error {
 }
 
 // apiV2RouteSegmentRefreshHandler marks a route segment for refresh
+// @Summary      Refresh route segment
+// @Description  Refreshes route segment data and recalculates statistics
+// @Tags         route-segments
+// @Produce      json
+// @Param        id   path      int  true  "Route segment ID"
+// @Success      200  {object}  api.Response[map[string]string]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /route-segments/{id}/refresh [post]
 func (a *App) apiV2RouteSegmentRefreshHandler(c echo.Context) error {
 	rs, err := a.getRouteSegment(c)
 	if err != nil {
@@ -191,6 +250,17 @@ func (a *App) apiV2RouteSegmentRefreshHandler(c echo.Context) error {
 }
 
 // apiV2RouteSegmentUpdateHandler updates a route segment
+// @Summary      Update route segment
+// @Description  Updates route segment metadata (name, notes, settings)
+// @Tags         route-segments
+// @Accept       json
+// @Produce      json
+// @Param        id     path      int  true  "Route segment ID"
+// @Success      200  {object}  api.Response[api.RouteSegmentDetailResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /route-segments/{id} [put]
 func (a *App) apiV2RouteSegmentUpdateHandler(c echo.Context) error {
 	rs, err := a.getRouteSegment(c)
 	if err != nil {
@@ -227,6 +297,14 @@ func (a *App) apiV2RouteSegmentUpdateHandler(c echo.Context) error {
 }
 
 // apiV2RouteSegmentDownloadHandler downloads the original route segment file
+// @Summary      Download route segment file
+// @Description  Downloads the original route segment file (GPX)
+// @Tags         route-segments
+// @Produce      application/octet-stream
+// @Param        id   path      int  true  "Route segment ID"
+// @Success      200  {file}    binary
+// @Failure      404  {object}  api.Response[any]
+// @Router       /route-segments/{id}/download [get]
 func (a *App) apiV2RouteSegmentDownloadHandler(c echo.Context) error {
 	rs, err := a.getRouteSegment(c)
 	if err != nil {
@@ -241,6 +319,15 @@ func (a *App) apiV2RouteSegmentDownloadHandler(c echo.Context) error {
 }
 
 // apiV2RouteSegmentFindMatchesHandler finds matching workouts for a route segment
+// @Summary      Find route segment matches
+// @Description  Initiates background search for workouts that match this route segment
+// @Tags         route-segments
+// @Produce      json
+// @Param        id   path      int  true  "Route segment ID"
+// @Success      200  {object}  api.Response[map[string]string]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /route-segments/{id}/matches [post]
 func (a *App) apiV2RouteSegmentFindMatchesHandler(c echo.Context) error {
 	rs, err := a.getRouteSegment(c)
 	if err != nil {

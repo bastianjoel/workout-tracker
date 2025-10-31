@@ -16,6 +16,16 @@ func (a *App) registerAPIV2MeasurementRoutes(apiGroup *echo.Group) {
 }
 
 // apiV2MeasurementsHandler returns a paginated list of measurements for the current user
+// @Summary      List measurements
+// @Description  Returns a paginated list of daily measurements (weight, height, steps) for the current user
+// @Tags         measurements
+// @Produce      json
+// @Param        page     query      int  false  "Page number" default(1)
+// @Param        per_page query      int  false  "Items per page" default(20)
+// @Success      200  {object}  api.PaginatedResponse[api.MeasurementResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /measurements [get]
 func (a *App) apiV2MeasurementsHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -58,6 +68,16 @@ func (a *App) apiV2MeasurementsHandler(c echo.Context) error {
 }
 
 // apiV2MeasurementCreateHandler creates or updates a measurement for a specific date
+// @Summary      Create or update measurement
+// @Description  Creates or updates a daily measurement entry (weight, height, steps)
+// @Tags         measurements
+// @Accept       json
+// @Produce      json
+// @Param        measurement body      Measurement  true  "Measurement data"
+// @Success      200  {object}  api.Response[api.MeasurementResponse]
+// @Failure      400  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /measurements [post]
 func (a *App) apiV2MeasurementCreateHandler(c echo.Context) error {
 	user := a.getCurrentUser(c)
 
@@ -86,6 +106,16 @@ func (a *App) apiV2MeasurementCreateHandler(c echo.Context) error {
 }
 
 // apiV2MeasurementDeleteHandler deletes a measurement for a specific date
+// @Summary      Delete measurement
+// @Description  Deletes a daily measurement entry for a specific date
+// @Tags         measurements
+// @Produce      json
+// @Param        date path      string  true  "Date (YYYY-MM-DD)"
+// @Success      204
+// @Failure      400  {object}  api.Response[any]
+// @Failure      404  {object}  api.Response[any]
+// @Failure      500  {object}  api.Response[any]
+// @Router       /measurements/{date} [delete]
 func (a *App) apiV2MeasurementDeleteHandler(c echo.Context) error {
 	u := a.getCurrentUser(c)
 
