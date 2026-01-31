@@ -1,0 +1,35 @@
+<div class="card shadow-sm">
+  <div class="card-header">
+    <h5 class="mb-0">
+      <app-icon class="me-2" name="users" />
+      <ng-container>{{ 'dashboard.other_users' | translate }}</ng-container>
+    </h5>
+  </div>
+  <div class="card-body">
+    @if (loading()) {
+      <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status">
+          <span class="visually-hidden">{{ 'misc.loading' | translate }}</span>
+        </div>
+      </div>
+    }
+    @if (error()) {
+      <div class="alert alert-danger mb-0" role="alert">
+        {{ error() }}
+      </div>
+    }
+    @if (!loading() && !error()) {
+      @if (otherUsers().length === 0) {
+        <p class="text-muted mb-0">{{ 'dashboard.other_users_empty' | translate }}</p>
+      } @else {
+        <div class="d-flex flex-wrap gap-2">
+          @for (user of otherUsers(); track user.id) {
+            <a class="btn btn-outline-primary btn-sm" [routerLink]="['/users', user.id]">
+              {{ user.username }}
+            </a>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>

@@ -5,11 +5,6 @@ filippo.io/edwards25519/field
 # github.com/KyleBanks/depth v1.2.1
 ## explicit
 github.com/KyleBanks/depth
-# github.com/a-h/templ v0.3.943
-## explicit; go 1.23.0
-github.com/a-h/templ
-github.com/a-h/templ/runtime
-github.com/a-h/templ/safehtml
 # github.com/alexedwards/scs/gormstore v0.0.0-20251002162104-209de6e426de
 ## explicit; go 1.12
 github.com/alexedwards/scs/gormstore
@@ -29,10 +24,6 @@ github.com/anyappinc/fitbit/logger
 # github.com/aquasecurity/table v1.11.0
 ## explicit; go 1.18
 github.com/aquasecurity/table
-# github.com/aymerick/douceur v0.2.0
-## explicit
-github.com/aymerick/douceur/css
-github.com/aymerick/douceur/parser
 # github.com/biter777/countries v1.7.5
 ## explicit; go 1.13
 github.com/biter777/countries
@@ -42,10 +33,7 @@ github.com/cat-dealer/go-rand/v2
 # github.com/cespare/xxhash/v2 v2.3.0
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
-# github.com/clipperhouse/stringish v0.1.1
-## explicit; go 1.18
-github.com/clipperhouse/stringish
-# github.com/clipperhouse/uax29/v2 v2.3.0
+# github.com/clipperhouse/uax29/v2 v2.2.0
 ## explicit; go 1.18
 github.com/clipperhouse/uax29/v2/graphemes
 github.com/clipperhouse/uax29/v2/internal/iterators
@@ -74,9 +62,6 @@ github.com/glebarez/go-sqlite
 # github.com/glebarez/sqlite v1.11.0
 ## explicit; go 1.18
 github.com/glebarez/sqlite
-# github.com/go-gorm/caches/v4 v4.0.5
-## explicit; go 1.18
-github.com/go-gorm/caches/v4
 # github.com/go-openapi/jsonpointer v0.22.4
 ## explicit; go 1.24.0
 github.com/go-openapi/jsonpointer
@@ -121,27 +106,12 @@ github.com/go-viper/mapstructure/v2/internal/errors
 # github.com/golang-jwt/jwt/v5 v5.3.0
 ## explicit; go 1.21
 github.com/golang-jwt/jwt/v5
-# github.com/gomarkdown/markdown v0.0.0-20250810172220-2e2c11897d1a
-## explicit; go 1.12
-github.com/gomarkdown/markdown
-github.com/gomarkdown/markdown/ast
-github.com/gomarkdown/markdown/html
-github.com/gomarkdown/markdown/parser
 # github.com/google/go-querystring v1.2.0
 ## explicit; go 1.13
 github.com/google/go-querystring/query
 # github.com/google/uuid v1.6.0
 ## explicit
 github.com/google/uuid
-# github.com/gorilla/css v1.0.1
-## explicit; go 1.20
-github.com/gorilla/css/scanner
-# github.com/gosimple/slug v1.15.0
-## explicit; go 1.11
-github.com/gosimple/slug
-# github.com/gosimple/unidecode v1.0.1
-## explicit; go 1.16
-github.com/gosimple/unidecode
 # github.com/hashicorp/go-cleanhttp v0.5.2
 ## explicit; go 1.13
 github.com/hashicorp/go-cleanhttp
@@ -212,10 +182,6 @@ github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.19
 ## explicit; go 1.20
 github.com/mattn/go-runewidth
-# github.com/microcosm-cc/bluemonday v1.0.27
-## explicit; go 1.19
-github.com/microcosm-cc/bluemonday
-github.com/microcosm-cc/bluemonday/css
 # github.com/mitchellh/mapstructure v1.5.0
 ## explicit; go 1.14
 github.com/mitchellh/mapstructure
@@ -294,9 +260,6 @@ github.com/samber/lo/mutable
 # github.com/samber/slog-echo v1.18.0
 ## explicit; go 1.21
 github.com/samber/slog-echo
-# github.com/sersh88/timeago v1.0.0
-## explicit; go 1.12
-github.com/sersh88/timeago
 # github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 ## explicit
 github.com/skratchdot/open-golang/open
@@ -326,10 +289,6 @@ github.com/spf13/viper/internal/encoding/json
 github.com/spf13/viper/internal/encoding/toml
 github.com/spf13/viper/internal/encoding/yaml
 github.com/spf13/viper/internal/features
-# github.com/stackus/hxgo v0.3.0
-## explicit; go 1.21
-github.com/stackus/hxgo
-github.com/stackus/hxgo/hxecho
 # github.com/stretchr/testify v1.11.1
 ## explicit; go 1.17
 github.com/stretchr/testify/assert
@@ -447,13 +406,11 @@ golang.org/x/text/encoding/simplifiedchinese
 golang.org/x/text/encoding/traditionalchinese
 golang.org/x/text/encoding/unicode
 golang.org/x/text/internal
-golang.org/x/text/internal/format
 golang.org/x/text/internal/language
 golang.org/x/text/internal/language/compact
 golang.org/x/text/internal/tag
 golang.org/x/text/internal/utf8internal
 golang.org/x/text/language
-golang.org/x/text/language/display
 golang.org/x/text/runes
 golang.org/x/text/secure/bidirule
 golang.org/x/text/secure/precis

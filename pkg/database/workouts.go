@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jovandeginste/workout-tracker/v2/pkg/converters"
 	"github.com/tkrajina/gpxgo/gpx"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -22,9 +21,45 @@ import (
 var (
 	ErrInvalidData          = errors.New("could not convert data to a GPX structure")
 	ErrWorkoutAlreadyExists = errors.New("user already has workout with exact start time")
+	ErrWorkoutParserMissing = errors.New("workout parser is not configured")
 )
 
+func init() {
+	WorkoutParser = defaultWorkoutParser
+}
+
+func defaultWorkoutParser(filename string, content []byte) ([]*Workout, error) {
+	gpxContent, err := gpx.ParseBytes(content)
+	if err != nil {
+		return nil, err
+	}
+
+	data := MapDataFromGPX(gpxContent)
+	w := &Workout{
+		Data: data,
+		Name: data.WorkoutData.Name,
+	}
+
+	if date := GPXDate(gpxContent); date != nil {
+		w.Date = *date
+	}
+
+	if filename == "" {
+		filename = w.Name
+	}
+
+	w.SetContent(filename, content)
+	w.UpdateAverages()
+	w.UpdateExtraMetrics()
+
+	return []*Workout{w}, nil
+}
+
 const minEventDuration = 1 * time.Second
+
+// WorkoutParser is configured by the converters package to parse file content into Workout models.
+// It is left nil in tests that do not require parsing.
+var WorkoutParser func(filename string, content []byte) ([]*Workout, error)
 
 type Workout struct {
 	Model
@@ -340,54 +375,55 @@ func NewWorkout(u *User, workoutType WorkoutType, notes string, filename string,
 
 	filename = filepath.Base(filename)
 
-	gpxContent, err := converters.ParseCollection(filename, content)
-	if err != nil {
-		return nil, err
+	if WorkoutParser == nil {
+		return nil, ErrWorkoutParserMissing
 	}
 
-	workouts := make([]*Workout, len(gpxContent))
+	parsed, err := WorkoutParser(filename, content)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse workout data: %w", err)
+	}
 
-	for i, g := range gpxContent {
-		data := &MapData{
-			WorkoutData: g.Data,
+	if len(parsed) == 0 {
+		return nil, nil
+	}
+
+	workouts := make([]*Workout, 0, len(parsed))
+
+	for _, parsedWorkout := range parsed {
+		if parsedWorkout == nil {
+			continue
 		}
 
-		d := &g.Data.Start
+		w := parsedWorkout
+		w.User = u
+		w.UserID = u.ID
+		w.Dirty = true
+		w.Notes = notes
 
-		if g.IsGPXBAsed() {
-			d = gpxDate(g.GPX)
-			data = gpxAsMapData(g.GPX)
+		if w.Data == nil {
+			w.Data = &MapData{}
 		}
 
 		if workoutType == WorkoutTypeAutoDetect {
-			workoutType = autoDetectWorkoutType(data, g.GPX, g.Data.Name)
+			w.Type = autoDetectWorkoutType(w.Data, w.Data.WorkoutData.Name)
+		} else {
+			w.Type = workoutType
 		}
 
-		w := &Workout{
-			User:   u,
-			UserID: u.ID,
-			Dirty:  true,
-			Name:   g.Data.Name,
-			Data:   data,
-			Notes:  notes,
-			Type:   workoutType,
-			Date:   *d,
+		// If multiple files are extracted (e.g., from a zip), prefer the per-file filename.
+		if w.GPX != nil && w.GPX.Filename == "" {
+			w.GPX.Filename = filename
 		}
 
-		// If multiple GPX files are extracted (e.g., from a zip), use the individual GPX filename.
-		if filename == "" || len(gpxContent) > 1 {
-			filename = g.Filename()
-		}
-
-		w.setContent(filename, g.Content)
-
-		workouts[i] = w
+		workouts = append(workouts, w)
 	}
 
 	return workouts, nil
 }
 
-func (w *Workout) setContent(filename string, content []byte) {
+// SetContent stores the raw workout file along with its checksum.
+func (w *Workout) SetContent(filename string, content []byte) {
 	if content == nil {
 		return
 	}
@@ -435,25 +471,17 @@ func workoutTypeFromData(gpxType string) (WorkoutType, bool) {
 	}
 }
 
-func autoDetectWorkoutType(data *MapData, gpxContent *gpx.GPX, dataName string) WorkoutType {
-	if gpxContent == nil {
-		if workoutType, ok := workoutTypeFromData(data.Type); ok {
-			return workoutType
-		}
-
-		return WorkoutTypeAutoDetect
-	}
-
-	// If the GPX file mentions a workout type (for the first track), use it
-	if len(gpxContent.Tracks) > 0 {
-		firstTrack := &gpxContent.Tracks[0]
-
-		if workoutType, ok := workoutTypeFromData(firstTrack.Type); ok {
+func autoDetectWorkoutType(data *MapData, dataName string) WorkoutType {
+	if data != nil {
+		if workoutType, ok := workoutTypeFromData(data.WorkoutData.Type); ok {
 			return workoutType
 		}
 	}
 
-	// If the GPX file mentions a workout type in the name (Runkeeper), use it
+	if dataName == "" && data != nil {
+		dataName = data.WorkoutData.Name
+	}
+
 	if len(dataName) > 0 {
 		nameField := strings.Fields(dataName)
 		if len(nameField) > 0 {
@@ -463,21 +491,27 @@ func autoDetectWorkoutType(data *MapData, gpxContent *gpx.GPX, dataName string) 
 		}
 	}
 
-	if 3.6*data.AverageSpeedNoPause > 15.0 {
-		return WorkoutTypeCycling
-	}
+	if data != nil {
+		if 3.6*data.AverageSpeedNoPause > 15.0 {
+			return WorkoutTypeCycling
+		}
 
-	if 3.6*data.AverageSpeedNoPause > 7.0 {
-		return WorkoutTypeRunning
+		if 3.6*data.AverageSpeedNoPause > 7.0 {
+			return WorkoutTypeRunning
+		}
 	}
 
 	return WorkoutTypeWalking
 }
 
 func GetRecentWorkouts(db *gorm.DB, count int) ([]*Workout, error) {
+	return GetRecentWorkoutsWithOffset(db, count, 0)
+}
+
+func GetRecentWorkoutsWithOffset(db *gorm.DB, count int, offset int) ([]*Workout, error) {
 	var w []*Workout
 
-	if err := db.Preload("Data").Preload("User").Order("date DESC").Limit(count).Find(&w).Error; err != nil {
+	if err := db.Preload("Data").Preload("User").Order("date DESC").Limit(count).Offset(offset).Find(&w).Error; err != nil {
 		return nil, err
 	}
 
@@ -600,17 +634,25 @@ func (w *Workout) save(db *gorm.DB) error {
 	return db.Save(w).Error
 }
 
-func (w *Workout) AsGPX() (*gpx.GPX, error) {
+func (w *Workout) ReparseFile() (*Workout, error) {
 	if !w.HasFile() {
 		return nil, errors.New("workout has no GPX")
 	}
 
-	wo, err := converters.Parse(w.GPX.Filename, w.GPX.Content)
+	if WorkoutParser == nil {
+		return nil, ErrWorkoutParserMissing
+	}
+
+	workouts, err := WorkoutParser(w.GPX.Filename, w.GPX.Content)
 	if err != nil {
 		return nil, err
 	}
 
-	return wo.GPX, nil
+	if len(workouts) == 0 {
+		return nil, nil
+	}
+
+	return workouts[0], nil
 }
 
 func (w *Workout) setData(data *MapData) {
@@ -649,8 +691,54 @@ func (w *Workout) UpdateAverages() {
 		return
 	}
 
+	if stats, ok := w.aggregateDetailsStats(); ok {
+		w.applyRangeStats(stats)
+		return
+	}
+
 	w.calculateAverageSpeeds()
-	w.calculateCadence()
+}
+
+func (w *Workout) aggregateDetailsStats() (MapDataRangeStats, bool) {
+	if w.Data == nil || w.Data.Details == nil {
+		return MapDataRangeStats{}, false
+	}
+
+	if len(w.Data.Details.Points) < 2 {
+		return MapDataRangeStats{}, false
+	}
+
+	return w.Data.Details.StatsForRange(0, len(w.Data.Details.Points)-1)
+}
+
+func (w *Workout) applyRangeStats(stats MapDataRangeStats) {
+	w.Data.AverageSpeed = stats.AverageSpeed
+	w.Data.AverageSpeedNoPause = stats.AverageSpeedNoPause
+	w.Data.MaxSpeed = stats.MaxSpeed
+	w.Data.MinSpeed = stats.MinSpeed
+
+	w.Data.AverageCadence = stats.AverageCadence
+	w.Data.MinCadence = stats.MinCadence
+	w.Data.MaxCadence = stats.MaxCadence
+	w.Data.AverageHeartRate = stats.AverageHeartRate
+	w.Data.MinHeartRate = stats.MinHeartRate
+	w.Data.MaxHeartRate = stats.MaxHeartRate
+	w.Data.AveragePower = stats.AveragePower
+	w.Data.MinPower = stats.MinPower
+	w.Data.MaxPower = stats.MaxPower
+
+	w.Data.AverageTemperature = stats.AverageTemperature
+	w.Data.MinTemperature = stats.MinTemperature
+	w.Data.MaxTemperature = stats.MaxTemperature
+
+	w.Data.AverageSlope = stats.AverageSlope
+	w.Data.MinSlope = stats.MinSlope
+	w.Data.MaxSlope = stats.MaxSlope
+
+	w.Data.MinElevation = stats.MinElevation
+	w.Data.MaxElevation = stats.MaxElevation
+	w.Data.TotalUp = stats.TotalUp
+	w.Data.TotalDown = stats.TotalDown
 }
 
 func (w *Workout) calculateAverageSpeeds() {
@@ -671,35 +759,6 @@ func (w *Workout) calculateAverageSpeeds() {
 	w.Data.AverageSpeedNoPause = w.Data.TotalDistance / (w.Data.TotalDuration - w.Data.PauseDuration).Seconds()
 }
 
-func (w *Workout) calculateCadence() {
-	w.Data.MaxCadence = 0
-	w.Data.AverageCadence = 0
-
-	if !w.HasCadence() {
-		return
-	}
-
-	trackedFor := time.Duration(0)
-	avgCadence := 0.0
-
-	for _, p := range w.Data.Details.Points {
-		c, ok := p.ExtraMetrics["cadence"]
-		if !ok {
-			continue
-		}
-
-		w.Data.MaxCadence = max(w.Data.MaxCadence, c)
-		avgCadence += c * p.Duration.Seconds()
-		trackedFor += p.Duration
-	}
-
-	if trackedFor.Seconds() == 0 {
-		return
-	}
-
-	w.Data.AverageCadence = avgCadence / trackedFor.Seconds()
-}
-
 func (w *Workout) UpdateData(db *gorm.DB) error {
 	if !w.HasFile() {
 		// We only update data from (stored) GPX data
@@ -708,12 +767,17 @@ func (w *Workout) UpdateData(db *gorm.DB) error {
 		return w.Save(db)
 	}
 
-	gpxContent, err := w.AsGPX()
+	updatedWorkout, err := w.ReparseFile()
 	if err != nil {
 		return err
 	}
 
-	w.setData(gpxAsMapData(gpxContent))
+	if updatedWorkout == nil || updatedWorkout.Data == nil {
+		return errors.New("parsed workout has no map data")
+	}
+
+	w.setData(updatedWorkout.Data)
+
 	if err := w.Data.Save(db); err != nil {
 		return err
 	}
@@ -724,6 +788,9 @@ func (w *Workout) UpdateData(db *gorm.DB) error {
 
 	w.UpdateAverages()
 	w.UpdateExtraMetrics()
+	if err := w.UpdateRecords(db); err != nil {
+		return err
+	}
 	w.Data.UpdateAddress()
 	w.Data.CalculateSlopes()
 
@@ -801,6 +868,46 @@ func (w *Workout) UpdateExtraMetrics() {
 	}
 
 	w.Data.UpdateExtraMetrics()
+}
+
+// UpdateRecords recalculates and persists best distance intervals for this workout.
+func (w *Workout) UpdateRecords(db *gorm.DB) error {
+	if db == nil {
+		return errors.New("nil db")
+	}
+
+	targets := distanceRecordTargetsFor(w.Type)
+
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("workout_id = ?", w.ID).Delete(&WorkoutIntervalRecord{}).Error; err != nil {
+			return err
+		}
+
+		if len(targets) == 0 || w.Data == nil || w.Data.Details == nil || len(w.Data.Details.Points) < 2 {
+			return nil
+		}
+
+		records := fastestDistancesForWorkout(w, targets)
+		if len(records) == 0 {
+			return nil
+		}
+
+		rows := make([]*WorkoutIntervalRecord, 0, len(records))
+		for _, r := range records {
+			rows = append(rows, &WorkoutIntervalRecord{
+				WorkoutID:       w.ID,
+				Label:           r.Label,
+				TargetDistance:  r.TargetDistance,
+				Distance:        r.Distance,
+				DurationSeconds: r.Duration.Seconds(),
+				AverageSpeed:    r.AverageSpeed,
+				StartIndex:      r.StartIndex,
+				EndIndex:        r.EndIndex,
+			})
+		}
+
+		return tx.Create(&rows).Error
+	})
 }
 
 func (w *Workout) HasExtraMetrics() bool {

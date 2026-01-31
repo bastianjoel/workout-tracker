@@ -1,0 +1,88 @@
+/**
+ * User domain models
+ */
+
+export type UserProfile = {
+  id: number;
+  username: string;
+  name: string;
+  birthdate?: string;
+  active: boolean;
+  admin: boolean;
+  last_version: string;
+  created_at: string;
+  updated_at: string;
+  preferred_units: UserPreferredUnits;
+  language: string;
+  theme: string;
+  timezone: string;
+  socials_disabled: boolean;
+  prefer_full_date: boolean;
+};
+
+export type AppInfo = {
+  version: string;
+  version_sha: string;
+  registration_disabled: boolean;
+  socials_disabled: boolean;
+};
+
+export type UserPreferredUnits = {
+  speed: string;
+  distance: string;
+  elevation: string;
+  weight: string;
+  height: string;
+};
+
+export type ProfileSettings = {
+  preferred_units: UserPreferredUnits;
+  language: string;
+  theme: string;
+  totals_show: string;
+  timezone: string;
+  auto_import_directory: string;
+  api_active: boolean;
+  api_key?: string;
+  socials_disabled: boolean;
+  prefer_full_date: boolean;
+};
+
+export type FullUserProfile = {
+  id: number;
+  username: string;
+  name: string;
+  birthdate?: string;
+  active: boolean;
+  admin: boolean;
+  last_version: string;
+  created_at: string;
+  updated_at: string;
+  profile: ProfileSettings;
+};
+
+export type UserUpdateRequest = {
+  name: string;
+  username: string;
+  admin: boolean;
+  active: boolean;
+  password?: string;
+};
+
+export type ProfileUpdateRequest = {
+  birthdate?: string;
+  preferred_units: UserPreferredUnits;
+  language: string;
+  theme: string;
+  totals_show: string;
+  timezone: string;
+  auto_import_directory: string;
+  api_active: boolean;
+  socials_disabled: boolean;
+  prefer_full_date: boolean;
+};
+
+export type AppConfig = {
+  registration_disabled: boolean;
+  socials_disabled: boolean;
+};

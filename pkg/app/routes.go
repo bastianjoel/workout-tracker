@@ -11,6 +11,8 @@ import (
 	"github.com/alexedwards/scs/gormstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/invopop/ctxi18n"
+	"github.com/jovandeginste/workout-tracker/v2/pkg/api"
+	"github.com/jovandeginste/workout-tracker/v2/pkg/geocoder"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -70,27 +72,14 @@ func (a *App) ConfigureWebserver() error {
 	})
 
 	publicGroup := e.Group(a.WebRoot())
-	a.apiRoutes(publicGroup)
+	a.apiV2Routes(publicGroup)
 
-	if a.AssetDir != "" {
-		publicGroup.Static("/assets", a.AssetDir)
-	} else {
-		publicGroup.StaticFS("/assets", a.Assets)
-	}
+	authGroup := publicGroup.Group("/auth")
+	authGroup.POST("/signin", a.userSigninHandler).Name = "user-signin"
+	authGroup.POST("/register", a.userRegisterHandler).Name = "user-register"
+	authGroup.GET("/signout", a.userSignoutHandler).Name = "user-signout"
 
-	publicGroup.GET("/assets", func(c echo.Context) error {
-		return c.Redirect(http.StatusFound, a.echo.Reverse("dashboard"))
-	}).Name = "assets"
-	publicGroup.GET("/share/:uuid", a.workoutShowShared).Name = "share"
-
-	userGroup := publicGroup.Group("/user")
-	userGroup.GET("/signin", a.userLoginHandler).Name = "user-login"
-	userGroup.POST("/signin", a.userSigninHandler).Name = "user-signin"
-	userGroup.POST("/register", a.userRegisterHandler).Name = "user-register"
-	userGroup.GET("/signout", a.userSignoutHandler).Name = "user-signout"
-
-	sec := a.addRoutesSecure(publicGroup)
-	a.adminRoutes(sec)
+	publicGroup.GET("/*", a.serveClientAppHandler).Name = "client-app"
 
 	a.echo = e
 
@@ -130,36 +119,6 @@ func (a *App) ValidateUserMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func (a *App) addRoutesSecure(e *echo.Group) *echo.Group {
-	secureGroup := e.Group("")
-
-	secureGroup.Use(echojwt.WithConfig(echojwt.Config{
-		SigningKey:  a.jwtSecret(),
-		TokenLookup: "cookie:token",
-		ErrorHandler: func(c echo.Context, err error) error {
-			log.Warn(err.Error())
-			return c.Redirect(http.StatusFound, a.echo.Reverse("user-signout"))
-		},
-	}))
-	secureGroup.Use(a.ValidateUserMiddleware)
-
-	secureGroup.GET("", a.dashboardHandler).Name = "dashboard"
-	secureGroup.GET("/daily", a.dailyHandler).Name = "daily"
-	secureGroup.POST("/daily", a.dailyUpdateHandler).Name = "daily-update"
-	secureGroup.DELETE("/daily/:date", a.dailyDeleteHandler).Name = "daily-delete"
-	secureGroup.GET("/statistics", a.statisticsHandler).Name = "statistics"
-	secureGroup.GET("/heatmap", a.heatmapHandler).Name = "heatmap"
-	secureGroup.POST("/lookup-address", a.lookupAddressHandler).Name = "lookup-address"
-
-	a.addRoutesSelf(secureGroup)
-	a.addRoutesUsers(secureGroup)
-	a.addRoutesEquipment(secureGroup)
-	a.addRoutesWorkouts(secureGroup)
-	a.addRoutesSegments(secureGroup)
-
-	return secureGroup
-}
-
 // extend echo.Context
 type contextValue struct {
 	echo.Context
@@ -190,4 +149,131 @@ func (a *App) ContextValueMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		// you return it with the extended version
 		return next(contextValue{c})
 	}
+}
+
+// @title           Workout Tracker API
+// @version         2.0
+// @description     Workout Tracker HTTP API (v2).
+// @BasePath        /api/v2
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+// @securityDefinitions.apikey ApiKeyQuery
+// @in query
+// @name api-key
+// @securityDefinitions.apikey CookieAuth
+// @in header
+// @name Cookie
+func (a *App) apiV2Routes(e *echo.Group) {
+	// Public routes
+	apiGroupPublic := e.Group("/api/v2")
+	apiGroupPublic.GET("/app-info", a.apiV2AppInfoHandler).Name = "api-v2-app-info"
+
+	apiGroup := e.Group("/api/v2")
+	apiGroup.Use(echojwt.WithConfig(echojwt.Config{
+		SigningKey:  a.jwtSecret(),
+		TokenLookup: "cookie:token",
+		ErrorHandler: func(c echo.Context, err error) error {
+			log.Warn(err.Error())
+
+			r := api.Response[any]{}
+			r.AddError(err)
+			r.AddError(api.ErrNotAuthorized)
+
+			return c.JSON(http.StatusForbidden, r)
+		},
+		Skipper: func(ctx echo.Context) bool {
+			if ctx.Request().Header.Get("Authorization") != "" {
+				return true
+			}
+
+			if ctx.Request().URL.Query().Get("api-key") != "" {
+				return true
+			}
+
+			return false
+		},
+		SuccessHandler: func(ctx echo.Context) {
+			if err := a.setUserFromContext(ctx); err != nil {
+				a.logger.Warn("error validating user", "error", err.Error())
+				return
+			}
+		},
+	}))
+
+	apiGroup.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+		Validator: a.ValidateAPIKeyMiddleware,
+		KeyLookup: "query:api-key",
+		Skipper: func(ctx echo.Context) bool {
+			return ctx.Request().URL.Query().Get("api-key") == ""
+		},
+	}))
+	apiGroup.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+		Validator: a.ValidateAPIKeyMiddleware,
+		Skipper: func(ctx echo.Context) bool {
+			return ctx.Request().Header.Get("Authorization") == ""
+		},
+	}))
+
+	a.registerAPIV2UserRoutes(apiGroup)
+	a.registerAPIV2WorkoutRoutes(apiGroup, apiGroupPublic)
+	a.registerAPIV2HeatmapRoutes(apiGroup)
+	a.registerAPIV2RouteSegmentRoutes(apiGroup)
+	a.registerAPIV2MeasurementRoutes(apiGroup)
+	a.registerAPIV2EquipmentRoutes(apiGroup)
+	a.registerAPIV2StatisticsRoutes(apiGroup)
+	a.registerAPIV2ProfileRoutes(apiGroup)
+	a.registerAPIV2AdminRoutes(apiGroup)
+
+	apiGroup.POST("/lookup-address", a.apiV2LookupAddressHandler).Name = "lookup-address"
+}
+
+// apiV2LookupAddressHandler searches an address
+// @Summary      Lookup address
+// @Tags         lookup
+// @Security     ApiKeyAuth
+// @Security     ApiKeyQuery
+// @Security     CookieAuth
+// @Produce      json
+// @Param        location  query  string true "Free text address"
+// @Success      200  {object}  api.Response[[]string]
+// @Failure      400  {object}  api.Response[any]
+// @Router       /lookup-address [post]
+func (a *App) apiV2LookupAddressHandler(c echo.Context) error {
+	q := c.Param("location")
+
+	results, err := geocoder.Search(q)
+	if err != nil {
+		return a.renderAPIV2Error(c, http.StatusBadRequest, err)
+	}
+
+	return c.JSON(http.StatusOK, api.Response[[]string]{
+		Results: results,
+	})
+}
+
+// apiV2AppInfoHandler returns application information
+// @Summary      Get application info
+// @Tags         meta
+// @Produce      json
+// @Success      200  {object}  api.Response[api.AppInfoResponse]
+// @Router       /app-info [get]
+func (a *App) apiV2AppInfoHandler(c echo.Context) error {
+	resp := api.Response[api.AppInfoResponse]{
+		Results: api.AppInfoResponse{
+			Version:              a.Version.PrettyVersion(),
+			VersionSha:           a.Version.Sha,
+			RegistrationDisabled: a.Config.RegistrationDisabled,
+			SocialsDisabled:      a.Config.SocialsDisabled,
+		},
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+// renderAPIV2Error renders an API v2 error response
+func (a *App) renderAPIV2Error(c echo.Context, status int, err error) error {
+	resp := api.Response[any]{}
+	resp.AddError(err)
+	return c.JSON(status, resp)
 }

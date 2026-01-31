@@ -1,0 +1,79 @@
+{
+  "name": "client",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve --host=0.0.0.0",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "lint": "ng lint",
+    "check-translations": "ngx-translate-lint --zk disable"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/common": "^21.0.1",
+    "@angular/compiler": "^21.0.1",
+    "@angular/core": "^21.0.1",
+    "@angular/forms": "^21.0.1",
+    "@angular/localize": "~21.0.1",
+    "@angular/platform-browser": "^21.0.1",
+    "@angular/router": "^21.0.1",
+    "@fullcalendar/core": "^6.1.19",
+    "@fullcalendar/daygrid": "^6.1.19",
+    "@fullcalendar/interaction": "^6.1.19",
+    "@ng-bootstrap/ng-bootstrap": "^20.0.0-rc.0",
+    "@ng-icons/core": "^33.0.0",
+    "@ng-icons/font-awesome": "^33.0.0",
+    "@ng-icons/heroicons": "^33.0.0",
+    "@ng-icons/ionicons": "^33.0.0",
+    "@ng-icons/material-icons": "^33.0.0",
+    "@ng-icons/material-symbols": "^33.0.0",
+    "@ng-icons/octicons": "^33.0.0",
+    "@ng-icons/simple-icons": "^33.0.0",
+    "@ngx-translate/core": "^17.0.0",
+    "@ngx-translate/http-loader": "^17.0.0",
+    "@popperjs/core": "^2.11.8",
+    "@types/leaflet.markercluster": "^1.5.6",
+    "bootstrap": "^5.3.6",
+    "chart.js": "^4.5.0",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "chartjs-plugin-zoom": "^2.2.0",
+    "date-fns": "^4.1.0",
+    "leaflet": "^1.9.4",
+    "leaflet.heat": "^0.2.0",
+    "leaflet.markercluster": "^1.5.3",
+    "ngx-translate-lint": "^1.26.5",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.0.1",
+    "@angular/cli": "^21.0.1",
+    "@angular/compiler-cli": "^21.0.1",
+    "@types/jasmine": "~5.1.0",
+    "@types/leaflet": "^1.9.21",
+    "@types/leaflet.heat": "^0.2.5",
+    "angular-eslint": "21.0.1",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "jasmine-core": "~5.9.0",
+    "jsdom": "^27.0.0",
+    "playwright": "^1.56.0",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "8.46.0"
+  }
+}

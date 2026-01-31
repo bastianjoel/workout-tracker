@@ -1,0 +1,64 @@
+<div class="container my-5 climb-ranking">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+    <div>
+      <a class="text-decoration-none" routerLink="/statistics/records">
+        {{ 'statistics.back_to_records' | translate }}
+      </a>
+      <h1 class="display-5 mb-1 d-flex align-items-center gap-2">
+        <app-icon class="text-primary" name="up" size="32" />
+        <span>{{ 'statistics.climb_ranking_title' | translate:{ sport: ('sports.' + workoutType) | translate } }}</span>
+      </h1>
+      <p class="text-muted mb-0">
+        {{ 'statistics.climb_ranking_description' | translate:{ sport: ('sports.' + workoutType) | translate } }}
+      </p>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="text-center my-5">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">{{ 'misc.loading' | translate }}</span>
+      </div>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert alert-danger" role="alert">{{ error() }}</div>
+  }
+
+  @if (!loading() && records().length === 0) {
+    <div class="alert alert-secondary">
+      {{ 'statistics.no_climb_records' | translate }}
+    </div>
+  }
+
+  @if (!loading() && records().length > 0) {
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th style="width: 80px">{{ 'statistics.rank' | translate }}</th>
+            <th>{{ 'statistics.elevation_gain' | translate }}</th>
+            <th>{{ 'dashboard.distance' | translate }}</th>
+            <th>{{ 'workout.average_slope' | translate }}</th>
+            <th class="text-end">{{ 'statistics.workout' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (cr of records(); track $index; let idx = $index) {
+            <tr>
+              <td class="fw-semibold">#{{ rankNumber(idx) }}</td>
+              <td class="fw-semibold">{{ formatElevation(cr.elevation_gain) }}</td>
+              <td>{{ formatDistance(cr.distance) }}</td>
+              <td>{{ formatSlope(cr.average_slope) }}</td>
+              <td class="text-end">
+                <a [routerLink]="['/workouts', cr.workout_id]">{{ formatDate(cr.date) }}</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <app-pagination [source]="paginationSource()" />
+    </div>
+  }
+</div>

@@ -53,10 +53,6 @@ func Connect(driver, dsn string, debug bool, logger *slog.Logger) (*gorm.DB, err
 		return nil, err
 	}
 
-	if err := db.Use(NewMemoryCache()); err != nil {
-		return nil, err
-	}
-
 	if err := preMigrationActions(db); err != nil {
 		return nil, err
 	}
@@ -64,6 +60,7 @@ func Connect(driver, dsn string, debug bool, logger *slog.Logger) (*gorm.DB, err
 	if err := db.AutoMigrate(
 		&User{}, &Profile{}, &Config{}, &Equipment{}, &WorkoutEquipment{}, &Measurement{},
 		&Workout{}, &GPXData{}, &MapData{}, &MapDataDetails{}, &RouteSegment{}, &RouteSegmentMatch{},
+		&WorkoutIntervalRecord{},
 	); err != nil {
 		return nil, err
 	}

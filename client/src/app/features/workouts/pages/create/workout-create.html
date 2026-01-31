@@ -1,0 +1,409 @@
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="display-4 mb-0">
+      {{
+        editMode()
+          ? ('workout.edit_workout' | translate)
+          : ('workout.Add_a_Workout' | translate)
+      }}
+    </h1>
+  </div>
+
+  <!-- Success/Error Messages -->
+  @if (success()) {
+    <div class="alert alert-success" role="alert">
+      {{ success() }}
+    </div>
+  }
+  @if (error()) {
+    <div class="alert alert-danger" role="alert">
+      {{ error() }}
+    </div>
+  }
+
+  <div class="row g-4">
+    <!-- File Upload Form (only in create mode) -->
+    @if (!editMode()) {
+      <div class="col-12 col-lg-6">
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <h5 class="mb-0">{{ 'workout.use_a_file' | translate }}</h5>
+          </div>
+          <div class="card-body">
+            <form #fileForm="ngForm" [formGroup]="fileUploadForm" (ngSubmit)="submitFileUpload()">
+              <div class="mb-3">
+                <label class="form-label" for="file">{{ 'misc.file' | translate }}</label>
+                <input
+                  accept=".fit,.ftb,.gpx,.tcx,.zip"
+                  class="form-control"
+                  id="file"
+                  multiple
+                  type="file"
+                  [disabled]="loading()"
+                  (change)="onFilesSelected($event)"
+                />
+                @if (selectedFiles().length > 0) {
+                  <div class="mt-2">
+                    @for (file of selectedFiles(); track file.name; let i = $index) {
+                      <div
+                        class="d-flex align-items-center justify-content-between p-2 bg-primary-subtle text-primary-emphasis rounded mb-2"
+                      >
+                        <span class="text-truncate">{{ file.name }}</span>
+                        <button
+                          class="btn btn-sm btn-link text-danger p-0"
+                          type="button"
+                          [disabled]="loading()"
+                          (click)="removeFile(i)"
+                        >
+                          <app-icon name="close" size="16" />
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label" for="type">{{ 'workout.type' | translate }}</label>
+                <select class="form-select" formControlName="type" id="type" [disabled]="loading()">
+                  <option value="auto">{{ 'workout.autodetect' | translate }}</option>
+                  @for (wt of workoutTypes; track wt.value) {
+                    <option [value]="wt.value">{{ wt.value }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label" for="file-notes">{{
+                  'misc.notes' | translate
+                }}</label>
+                <textarea
+                  class="form-control"
+                  formControlName="notes"
+                  id="file-notes"
+                  rows="4"
+                  [disabled]="loading()"
+                ></textarea>
+              </div>
+
+              <div class="mb-3">
+                <p class="fw-bold mb-2">{{ 'workout.resources' | translate }}</p>
+                <p class="text-muted small">
+                  {{
+                    'workout.You_can_edit_your_GPX_files_before_uploading_them_here' | translate
+                  }}
+                </p>
+                <ul class="small text-muted">
+                  <li>{{ 'workout.split_files_with_multiple_tracks' | translate }}</li>
+                  <li>
+                    {{ 'workout.convert_from_not_yet_supported_file_format' | translate }}
+                  </li>
+                  <li>
+                    {{ 'workout.remove_the_beginning_or_the_ending_of_a_workout' | translate }}
+                  </li>
+                </ul>
+                <p class="text-muted small">
+                  {{ 'workout.try_one_of_these_sites' | translate }}
+                </p>
+                <ul class="small">
+                  <li>
+                    <a href="https://gpx.studio/" target="_blank"
+                      >gpx.studio — the online GPX file editor</a
+                    >
+                  </li>
+                  <li>
+                    <a href="https://kml2gpx.com/" target="_blank"
+                      >Kml2gpx.com: convert kml to gpx online</a
+                    >
+                  </li>
+                  <li>
+                    <a href="https://www.fitfileviewer.com/" target="_blank">FIT File Viewer</a>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="d-grid">
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                  [disabled]="loading() || selectedFiles().length === 0"
+                >
+                  @if (loading()) {
+                    <span
+                      aria-hidden="true"
+                      class="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    ></span>
+                  }
+                  <span>{{ 'workout.add_workouts' | translate }}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Manual Workout Form -->
+    <div [class.col-12]="editMode()" [class.col-lg-6]="!editMode()">
+      <div class="card shadow-sm">
+        <div class="card-header">
+          <h5 class="mb-0">
+            {{
+				editMode() ? ('misc.details' | translate) : ('workout.manual' | translate)
+            }}
+          </h5>
+        </div>
+        <div class="card-body">
+          <form
+            #manualFormRef="ngForm"
+            [formGroup]="manualWorkoutForm"
+            (ngSubmit)="submitManualWorkout()"
+          >
+            <div class="mb-3">
+              <label class="form-label" for="workout-type">{{
+                'workout.Workout_type' | translate
+              }}</label>
+              <select
+                class="form-select"
+                id="workout-type"
+                name="workout-type"
+                required
+                [disabled]="loading()"
+                [value]="manualWorkoutType()"
+                (change)="updateManualWorkoutType($any($event.target).value)"
+              >
+                <option value="">{{ 'workout.select' | translate }}</option>
+                @for (wt of workoutTypes; track wt.value) {
+                  <option [value]="wt.value">{{ wt.value }}</option>
+                }
+              </select>
+            </div>
+
+            @if (manualFormVisible()) {
+              @if (showCustomType()) {
+                <div class="mb-3">
+                  <label class="form-label" for="custom-type">{{
+                    'workout.type' | translate
+                  }}</label>
+                  <input
+                    class="form-control"
+                    formControlName="custom_type"
+                    id="custom-type"
+                    required
+                    type="text"
+                    [disabled]="loading()"
+                  />
+                </div>
+              }
+
+              <div class="mb-3">
+                <label class="form-label" for="name">{{ 'misc.name' | translate }}</label>
+                <input
+                  class="form-control"
+                  formControlName="name"
+                  id="name"
+                  required
+                  type="text"
+                  [disabled]="loading()"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label" for="date">{{ 'misc.date' | translate }}</label>
+                <input
+                  class="form-control"
+                  formControlName="date"
+                  id="date"
+                  required
+                  type="datetime-local"
+                  [disabled]="loading()"
+                />
+              </div>
+
+              @if (showLocation()) {
+                <div class="mb-3">
+                  <label class="form-label" for="location">{{
+                    'misc.location' | translate
+                  }}</label>
+                  <input
+                    class="form-control"
+                    formControlName="location"
+                    id="location"
+                    type="text"
+                    [disabled]="loading()"
+                  />
+                </div>
+              }
+
+              @if (showDuration()) {
+                <div class="mb-3">
+                  <label class="form-label" for="duration-hours">{{
+                    'dashboard.duration' | translate
+                  }}</label>
+                  <div class="d-flex align-items-center gap-2">
+                    <input
+                      class="form-control"
+                      formControlName="duration_hours"
+                      id="duration-hours"
+                      max="999"
+                      min="0"
+                      placeholder="HH"
+                      required
+                      style="width: 5rem"
+                      type="number"
+                      [disabled]="loading()"
+                    />
+                    <span>:</span>
+                    <input
+                      class="form-control"
+                      formControlName="duration_minutes"
+                      max="59"
+                      min="0"
+                      placeholder="MM"
+                      required
+                      style="width: 5rem"
+                      type="number"
+                      [disabled]="loading()"
+                    />
+                    <span>:</span>
+                    <input
+                      class="form-control"
+                      formControlName="duration_seconds"
+                      max="59"
+                      min="0"
+                      placeholder="SS"
+                      required
+                      style="width: 5rem"
+                      type="number"
+                      [disabled]="loading()"
+                    />
+                    <span class="text-muted small">{{ 'misc.duration_hms_hint' | translate }}</span>
+                  </div>
+                </div>
+              }
+
+              @if (showDistance()) {
+                <div class="mb-3">
+                  <label class="form-label" for="distance">{{
+                    'dashboard.distance' | translate
+                  }}</label>
+                  <div class="input-group">
+                    <input
+                      class="form-control"
+                      formControlName="distance"
+                      id="distance"
+                      required
+                      step="0.01"
+                      type="number"
+                      [disabled]="loading()"
+                    />
+                    <span class="input-group-text">
+                      {{ 'units.kilometers_short' | translate }}
+                    </span>
+                  </div>
+                </div>
+              }
+
+              @if (showRepetitions()) {
+                <div class="mb-3">
+                  <label class="form-label" for="repetitions">{{
+                    'workout.repetitions' | translate
+                  }}</label>
+                  <input
+                    class="form-control"
+                    formControlName="repetitions"
+                    id="repetitions"
+                    min="0"
+                    required
+                    type="number"
+                    [disabled]="loading()"
+                  />
+                </div>
+              }
+
+              @if (showWeight()) {
+                <div class="mb-3">
+                  <label class="form-label" for="weight">{{
+                    'measurements.weight' | translate
+                  }}</label>
+                  <div class="input-group">
+                    <input
+                      class="form-control"
+                      formControlName="weight"
+                      id="weight"
+                      required
+                      step="0.1"
+                      type="number"
+                      [disabled]="loading()"
+                    />
+                    <span class="input-group-text">
+                      {{ 'units.kilograms_short' | translate }}
+                    </span>
+                  </div>
+                </div>
+              }
+
+              <div class="mb-3">
+                <label class="form-label" for="manual-notes">{{
+                  'misc.notes' | translate
+                }}</label>
+                <textarea
+                  class="form-control"
+                  formControlName="notes"
+                  id="manual-notes"
+                  rows="10"
+                  [disabled]="loading()"
+                ></textarea>
+              </div>
+
+              @if (equipment().length > 0) {
+                <div class="mb-3">
+                  <p class="fw-bold mb-2">{{ 'equipment.equipment' | translate }}</p>
+                  <div class="d-flex flex-wrap gap-2">
+                    @for (eq of equipment(); track eq.id) {
+                      <div class="form-check">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          [checked]="isEquipmentSelected(eq.id)"
+                          [disabled]="loading()"
+                          [id]="'equipment-' + eq.id"
+                          (change)="toggleEquipment(eq.id)"
+                        />
+                        <label class="form-check-label" [for]="'equipment-' + eq.id">
+                          {{ eq.name }}
+                        </label>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <div class="d-grid">
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                  [disabled]="loading() || !manualWorkoutType() || manualWorkoutForm.invalid"
+                >
+                  @if (loading()) {
+                    <span
+                      aria-hidden="true"
+                      class="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    ></span>
+                  }
+                  <span>{{
+                    editMode()
+                      ? ('workout.update_workout' | translate)
+                      : ('workout.add_workout' | translate)
+                  }}</span>
+                </button>
+              </div>
+            }
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

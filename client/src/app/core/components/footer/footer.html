@@ -1,0 +1,51 @@
+<footer class="py-4 mt-auto">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+        <p class="mb-0 text-muted">
+          <small>Workout Tracker</small>
+          @if (version() && versionSha()) {
+            <a
+              class="text-decoration-none me-3"
+              target="_blank"
+              [href]="'https://github.com/jovandeginste/workout-tracker/tree/' + versionSha()"
+            >
+              <small> - {{ version() }}</small>
+            </a>
+          }
+        </p>
+      </div>
+      <div class="col-md-6 text-center text-md-end">
+        <p class="mb-0 text-muted">
+          <small>
+            <a
+              class="text-decoration-none me-3"
+              href="https://hosted.weblate.org/projects/workout-tracker/web-interface/"
+              target="_blank"
+              >{{ 'footer.help_translate' | translate }}</a
+            >
+            @if (versionSha()) {
+              <a
+                class="text-decoration-none me-3"
+                target="_blank"
+                [href]="
+                  'https://github.com/jovandeginste/workout-tracker/tree/' +
+                  versionSha() +
+                  '/CHANGELOG.md'
+                "
+                >{{ 'footer.changelog' | translate }}</a
+              >
+            }
+            <a
+              class="text-decoration-none"
+              href="https://github.com/jovandeginste/workout-tracker"
+              target="_blank"
+            >
+              GitHub
+            </a>
+          </small>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>

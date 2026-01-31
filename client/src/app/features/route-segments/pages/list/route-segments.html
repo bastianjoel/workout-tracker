@@ -1,0 +1,93 @@
+<app-base-list
+  [config]="routeSegmentListConfig"
+  [emptyMessage]="'route_segment.no_route_segments'"
+  [error]="error()"
+  [hasItems]="hasRouteSegments()"
+  [loading]="loading()"
+  [paginationSource]="pagination()"
+>
+  <div table>
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>{{ 'misc.name' | translate }}</th>
+          <th class="text-end">{{ 'dashboard.distance' | translate }}</th>
+          <th class="text-end d-none d-md-table-cell">
+            {{ 'route_segment.max_elevation' | translate }}
+          </th>
+          <th class="text-end d-none d-lg-table-cell">{{ 'route_segment.matches' | translate }}</th>
+          <th class="text-end d-none d-lg-table-cell">{{ 'misc.created' | translate }}</th>
+          <th class="text-end d-none d-xl-table-cell">{{ 'misc.actions' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (segment of routeSegments(); track segment.id) {
+          <tr>
+            <td style="cursor: pointer" [routerLink]="['/route-segments', segment.id]">
+              <div class="d-flex align-items-center gap-2">
+                <app-icon name="route-segment" size="24" />
+                <div>
+                  <strong>{{ segment.name || '(no name)' }}</strong>
+                  @if (segment.notes) {
+                    <br />
+                    <small class="text-muted">{{ segment.notes.substring(0, 50) }}...</small>
+                  }
+                  @if (segment.bidirectional) {
+                    <br />
+                    <small class="text-muted">
+                      <app-icon name="bidirectional" size="14" />
+                      <span>{{ 'route_segment.bidirectional' | translate }}</span>
+                    </small>
+                  }
+                  @if (segment.circular) {
+                    <br />
+                    <small class="text-muted">
+                      <app-icon name="circular" size="14" />
+                      <span>{{ 'route_segment.circular' | translate }}</span>
+                    </small>
+                  }
+                </div>
+              </div>
+            </td>
+            <td
+              class="text-end"
+              style="cursor: pointer"
+              [routerLink]="['/route-segments', segment.id]"
+            >
+              <strong>{{ formatDistance(segment.total_distance) }}</strong> km
+            </td>
+            <td
+              class="text-end d-none d-md-table-cell"
+              style="cursor: pointer"
+              [routerLink]="['/route-segments', segment.id]"
+            >
+              {{ segment.total_up.toFixed(0) }} m
+            </td>
+            <td
+              class="text-end d-none d-lg-table-cell"
+              style="cursor: pointer"
+              [routerLink]="['/route-segments', segment.id]"
+            >
+              {{ segment.match_count }}
+            </td>
+            <td
+              class="text-end d-none d-lg-table-cell"
+              style="cursor: pointer"
+              [routerLink]="['/route-segments', segment.id]"
+            >
+              {{ formatDate(segment.created_at) }}
+            </td>
+            <td class="text-end d-none d-xl-table-cell" (click)="$event.stopPropagation()">
+              <app-route-segment-actions
+                [compact]="true"
+                [routeSegment]="segment"
+                (routeSegmentDeleted)="loadData()"
+                (routeSegmentUpdated)="loadData()"
+              />
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</app-base-list>

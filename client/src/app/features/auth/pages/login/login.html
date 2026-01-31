@@ -1,0 +1,159 @@
+<app-public-layout>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10 col-xl-8">
+        <div class="text-center mb-5">
+          <h1 class="display-4 fw-bold mb-3">{{ 'auth.welcome' | translate }}</h1>
+          <p class="lead text-muted">{{ 'auth.welcome_lead' | translate }}</p>
+        </div>
+
+        <div class="row g-4">
+          <!-- Sign In Form -->
+          <div [class]="isRegistrationDisabled ? 'col-12 col-md-8 col-lg-6 mx-auto' : 'col-md-6'">
+            <div class="card shadow-sm h-100">
+              <div class="card-body p-4">
+                <h3 class="card-title text-center mb-4">{{ 'auth.sign_in' | translate }}</h3>
+
+                @if (errorMessage()) {
+                  <div class="alert alert-danger" role="alert">
+                    {{ errorMessage() }}
+                  </div>
+                }
+
+                <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+                  <!-- Username input -->
+                  <div class="form-floating mb-3">
+                    <input
+                      autocomplete="username"
+                      class="form-control"
+                      formControlName="username"
+                      id="username"
+                      placeholder="Username"
+                      required
+                      type="text"
+                    />
+                    <label for="username">{{ 'auth.username_email' | translate }}</label>
+                  </div>
+
+                  <!-- Password input -->
+                  <div class="form-floating mb-4">
+                    <input
+                      autocomplete="current-password"
+                      class="form-control"
+                      formControlName="password"
+                      id="password"
+                      placeholder="Password"
+                      required
+                      type="password"
+                    />
+                    <label for="password">{{ 'auth.password' | translate }}</label>
+                  </div>
+
+                  <button
+                    class="btn btn-primary w-100"
+                    type="submit"
+                    [disabled]="loginForm.invalid"
+                  >
+                    {{ 'auth.sign_in' | translate }}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Register Form -->
+          @if (!isRegistrationDisabled) {
+            <div class="col-md-6">
+              <div class="card shadow-sm h-100">
+                <div class="card-body p-4">
+                  <h3 class="card-title text-center mb-4">
+                    {{ 'auth.register' | translate }}
+                  </h3>
+
+                  @if (registerErrorMessage()) {
+                    <div class="alert alert-danger" role="alert">
+                      {{ registerErrorMessage() }}
+                    </div>
+                  }
+
+                  @if (registerSuccessMessage()) {
+                    <div class="alert alert-success" role="alert">
+                      {{ registerSuccessMessage() }}
+                    </div>
+                  }
+
+                  <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
+                    <!-- Register Username input -->
+                    <div class="form-floating mb-3">
+                      <input
+                        autocomplete="username"
+                        class="form-control"
+                        formControlName="username"
+                        id="registerUsername"
+                        placeholder="Username"
+                        required
+                        type="text"
+                      />
+                      <label for="registerUsername">{{
+                        'auth.username_email' | translate
+                      }}</label>
+                    </div>
+
+                    <!-- Register Password input -->
+                    <div class="form-floating mb-3">
+                      <input
+                        autocomplete="new-password"
+                        class="form-control"
+                        formControlName="password"
+                        id="registerPassword"
+                        minlength="6"
+                        placeholder="Password"
+                        required
+                        type="password"
+                      />
+                      <label for="registerPassword">{{ 'auth.password' | translate }}</label>
+                    </div>
+
+                    <!-- Confirm Password input -->
+                    <div class="form-floating mb-3">
+                      <input
+                        autocomplete="new-password"
+                        class="form-control"
+                        formControlName="confirmPassword"
+                        id="confirmPassword"
+                        required
+                        type="password"
+                        [class.is-invalid]="
+                          registerForm.get('confirmPassword')?.touched &&
+                          registerForm.hasError('passwordMismatch')
+                        "
+                        [placeholder]="'auth.confirm_password' | translate"
+                      />
+                      <label for="confirmPassword">{{ 'auth.confirm_password' | translate }}</label>
+                      @if (
+                        registerForm.get('confirmPassword')?.touched &&
+                        registerForm.hasError('passwordMismatch')
+                      ) {
+                        <div class="invalid-feedback d-block">
+                          {{ 'auth.passwords_do_not_match' | translate }}
+                        </div>
+                      }
+                    </div>
+
+                    <button
+                      class="btn btn-success w-100 mb-3"
+                      type="submit"
+                      [disabled]="registerForm.invalid"
+                    >
+                      {{ 'auth.register' | translate }}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</app-public-layout>

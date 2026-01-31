@@ -1,0 +1,12 @@
+.workout-actions {
+  position: relative;
+
+  .alert {
+    position: absolute;
+    top: -60px;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    margin-bottom: 1rem;
+  }
+}

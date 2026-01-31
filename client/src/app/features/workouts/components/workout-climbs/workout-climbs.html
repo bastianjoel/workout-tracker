@@ -1,0 +1,32 @@
+<div class="table-responsive">
+  <table class="table table-sm table-hover align-middle climbs-table">
+    <thead>
+      <tr>
+        <th>{{ 'workout.type' | translate }}</th>
+        <th>{{ 'workout.start' | translate }}</th>
+        <th>{{ 'dashboard.distance' | translate }}</th>
+        <th>{{ 'dashboard.elevation' | translate }}</th>
+        <th>{{ 'workout.average_slope' | translate }}</th>
+        <th>{{ 'workout.category' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (climb of climbs(); track climb.index) {
+        <tr class="interval-row" [class.table-active]="isSelected(climb)" (click)="selectClimb(climb)">
+          <td>
+            @if (climb.type === 'climb') {
+              <span class="text-success">↑ Climb {{ climb.index }}</span>
+            } @else {
+              <span class="text-warning">↓ Descent {{ climb.index }}</span>
+            }
+          </td>
+          <td>{{ formatDistance(climb.start_distance) }} km</td>
+          <td>{{ formatDistance(climb.length) }} km</td>
+          <td>{{ formatElevation(climb.elevation) }} m</td>
+          <td>{{ (climb.avg_slope * 100).toFixed(1) }}%</td>
+          <td>{{ climb.category }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
