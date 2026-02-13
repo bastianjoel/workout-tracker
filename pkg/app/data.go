@@ -91,31 +91,3 @@ func (a *App) getRouteSegment(c echo.Context) (*database.RouteSegment, error) {
 
 	return rs, nil
 }
-
-func (a *App) getWorkout(c echo.Context) (*database.Workout, error) {
-	id, err := cast.ToUint64E(c.Param("id"))
-	if err != nil {
-		return nil, err
-	}
-
-	w, err := a.getCurrentUser(c).GetWorkout(a.db, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return w, nil
-}
-
-func (a *App) getEquipment(c echo.Context) (*database.Equipment, error) {
-	id, err := cast.ToUint64E(c.Param("id"))
-	if err != nil {
-		return nil, err
-	}
-
-	w, err := a.getCurrentUser(c).GetEquipment(a.db, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return w, nil
-}
