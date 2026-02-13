@@ -203,7 +203,7 @@ func (a *App) apiV2Routes(e *echo.Group) {
 	a.registerAPIV2HeatmapRoutes(apiGroup)
 	a.registerAPIV2RouteSegmentRoutes(apiGroup)
 	a.registerAPIV2MeasurementRoutes(apiGroup)
-	a.registerAPIV2EquipmentRoutes(apiGroup)
+	a.registerEquipmentController(apiGroup)
 	a.registerAPIV2StatisticsRoutes(apiGroup)
 	a.registerAPIV2ProfileRoutes(apiGroup)
 	a.registerAPIV2AdminRoutes(apiGroup)
