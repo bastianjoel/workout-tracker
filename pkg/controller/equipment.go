@@ -22,8 +22,6 @@ type equipmentController struct {
 	context *container.Container
 }
 
-var _ EquipmentController = (*equipmentController)(nil)
-
 func NewEquipmentController(c *container.Container) EquipmentController {
 	return &equipmentController{context: c}
 }

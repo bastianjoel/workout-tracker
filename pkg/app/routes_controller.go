@@ -39,3 +39,33 @@ func (a *App) registerWorkoutController(apiGroup *echo.Group, apiGroupPublic *ec
 	apiGroupPublic.GET("/workouts/public/:uuid/breakdown", wc.GetPublicWorkoutBreakdown).Name = "workout-public-breakdown"
 	apiGroupPublic.GET("/workouts/public/:uuid/stats-range", wc.GetPublicWorkoutRangeStats).Name = "workout-public-range-stats"
 }
+
+func (a *App) registerHeatmapController(apiGroup *echo.Group) {
+	hc := controller.NewHeatmapController(container.NewContainer(a.db))
+
+	apiGroup.GET("/workouts/coordinates", hc.GetWorkoutCoordinates).Name = "workouts-coordinates"
+	apiGroup.GET("/workouts/centers", hc.GetWorkoutCenters).Name = "workouts-centers"
+}
+
+func (a *App) registerMeasurementController(apiGroup *echo.Group) {
+	mc := controller.NewMeasurementController(container.NewContainer(a.db))
+
+	apiGroup.GET("/measurements", mc.GetMeasurements).Name = "measurements-list"
+	apiGroup.POST("/measurements", mc.CreateMeasurement).Name = "measurements-create"
+	apiGroup.DELETE("/measurements/:date", mc.DeleteMeasurement).Name = "measurements-delete"
+}
+
+func (a *App) registerRouteSegmentController(apiGroup *echo.Group) {
+	rsc := controller.NewRouteSegmentController(container.NewContainer(a.db))
+
+	routeSegmentsGroup := apiGroup.Group("/route-segments")
+	routeSegmentsGroup.GET("", rsc.GetRouteSegments).Name = "route-segments-list"
+	routeSegmentsGroup.POST("", rsc.CreateRouteSegment).Name = "route-segment-create"
+	routeSegmentsGroup.GET("/:id", rsc.GetRouteSegment).Name = "route-segment-get"
+	routeSegmentsGroup.PUT("/:id", rsc.UpdateRouteSegment).Name = "route-segment-update"
+	routeSegmentsGroup.DELETE("/:id", rsc.DeleteRouteSegment).Name = "route-segment-delete"
+	routeSegmentsGroup.POST("/:id/refresh", rsc.RefreshRouteSegment).Name = "route-segment-refresh"
+	routeSegmentsGroup.POST("/:id/matches", rsc.FindRouteSegmentMatches).Name = "route-segment-matches"
+	routeSegmentsGroup.GET("/:id/download", rsc.DownloadRouteSegment).Name = "route-segment-download"
+	apiGroup.POST("/workouts/:id/route-segment", rsc.CreateRouteSegmentFromWorkout).Name = "workout-route-segment-create"
+}
