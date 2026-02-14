@@ -1,14 +1,12 @@
 package app
 
 import (
-	"github.com/jovandeginste/workout-tracker/v2/pkg/api"
-	"github.com/jovandeginste/workout-tracker/v2/pkg/container"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/controller"
 	"github.com/labstack/echo/v4"
 )
 
 func (a *App) registerUserController(apiGroup *echo.Group) {
-	uc := controller.NewUserController(container.NewContainer(a.db))
+	uc := controller.NewUserController(a.getContainer())
 
 	apiGroup.GET("/whoami", uc.GetWhoami).Name = "api-v2-whoami"
 	apiGroup.GET("/totals", uc.GetTotals).Name = "api-v2-totals"
@@ -19,13 +17,13 @@ func (a *App) registerUserController(apiGroup *echo.Group) {
 }
 
 func (a *App) registerStatisticsController(apiGroup *echo.Group) {
-	sc := controller.NewStatisticsController(container.NewContainer(a.db))
+	sc := controller.NewStatisticsController(a.getContainer())
 
 	apiGroup.GET("/statistics", sc.GetStatistics).Name = "api-v2-statistics"
 }
 
 func (a *App) registerProfileController(apiGroup *echo.Group) {
-	pc := controller.NewProfileController(container.NewContainer(a.db), a.Version.Sha)
+	pc := controller.NewProfileController(a.getContainer())
 
 	profileGroup := apiGroup.Group("/profile")
 	profileGroup.GET("", pc.GetProfile).Name = "api-v2-profile"
@@ -37,15 +35,8 @@ func (a *App) registerProfileController(apiGroup *echo.Group) {
 
 func (a *App) registerAdminController(apiGroup *echo.Group) {
 	ac := controller.NewAdminController(
-		container.NewContainer(a.db),
+		a.getContainer(),
 		a.ResetConfiguration,
-		func() api.AppInfoResponse {
-			return api.AppInfoResponse{
-				Version:              a.Version.PrettyVersion(),
-				RegistrationDisabled: a.Config.RegistrationDisabled,
-				SocialsDisabled:      a.Config.SocialsDisabled,
-			}
-		},
 	)
 
 	adminGroup := apiGroup.Group("/admin")
@@ -59,7 +50,7 @@ func (a *App) registerAdminController(apiGroup *echo.Group) {
 }
 
 func (a *App) registerEquipmentController(apiGroup *echo.Group) {
-	ec := controller.NewEquipmentController(container.NewContainer(a.db))
+	ec := controller.NewEquipmentController(a.getContainer())
 
 	apiGroup.GET("/equipment", ec.GetEquipmentList).Name = "equipment-list"
 	apiGroup.GET("/equipment/:id", ec.GetEquipment).Name = "equipment-get"
@@ -69,7 +60,7 @@ func (a *App) registerEquipmentController(apiGroup *echo.Group) {
 }
 
 func (a *App) registerWorkoutController(apiGroup *echo.Group, apiGroupPublic *echo.Group) {
-	wc := controller.NewWorkoutController(container.NewContainer(a.db))
+	wc := controller.NewWorkoutController(a.getContainer())
 
 	workoutGroup := apiGroup.Group("/workouts")
 	workoutGroup.GET("", wc.GetWorkouts).Name = "workouts-list"
@@ -93,14 +84,14 @@ func (a *App) registerWorkoutController(apiGroup *echo.Group, apiGroupPublic *ec
 }
 
 func (a *App) registerHeatmapController(apiGroup *echo.Group) {
-	hc := controller.NewHeatmapController(container.NewContainer(a.db))
+	hc := controller.NewHeatmapController(a.getContainer())
 
 	apiGroup.GET("/workouts/coordinates", hc.GetWorkoutCoordinates).Name = "workouts-coordinates"
 	apiGroup.GET("/workouts/centers", hc.GetWorkoutCenters).Name = "workouts-centers"
 }
 
 func (a *App) registerMeasurementController(apiGroup *echo.Group) {
-	mc := controller.NewMeasurementController(container.NewContainer(a.db))
+	mc := controller.NewMeasurementController(a.getContainer())
 
 	apiGroup.GET("/measurements", mc.GetMeasurements).Name = "measurements-list"
 	apiGroup.POST("/measurements", mc.CreateMeasurement).Name = "measurements-create"
@@ -108,7 +99,7 @@ func (a *App) registerMeasurementController(apiGroup *echo.Group) {
 }
 
 func (a *App) registerRouteSegmentController(apiGroup *echo.Group) {
-	rsc := controller.NewRouteSegmentController(container.NewContainer(a.db))
+	rsc := controller.NewRouteSegmentController(a.getContainer())
 
 	routeSegmentsGroup := apiGroup.Group("/route-segments")
 	routeSegmentsGroup.GET("", rsc.GetRouteSegments).Name = "route-segments-list"

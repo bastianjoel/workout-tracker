@@ -20,8 +20,7 @@ type ProfileController interface {
 }
 
 type profileController struct {
-	context    *container.Container
-	versionSha string
+	context *container.Container
 }
 
 type profileUpdateData struct {
@@ -37,8 +36,8 @@ type profileUpdateData struct {
 	PreferFullDate      bool                        `json:"prefer_full_date"`
 }
 
-func NewProfileController(c *container.Container, versionSha string) ProfileController {
-	return &profileController{context: c, versionSha: versionSha}
+func NewProfileController(c *container.Container) ProfileController {
+	return &profileController{context: c}
 }
 
 // GetProfile returns current user's full profile with settings
@@ -193,7 +192,12 @@ func (pc *profileController) RefreshWorkouts(c echo.Context) error {
 func (pc *profileController) UpdateVersion(c echo.Context) error {
 	u := pc.context.GetUser(c)
 
-	u.LastVersion = pc.versionSha
+	v := pc.context.GetVersion()
+	if v == nil {
+		return c.String(http.StatusInternalServerError, "version not configured")
+	}
+
+	u.LastVersion = v.Sha
 	if err := u.Save(pc.context.GetDB()); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}

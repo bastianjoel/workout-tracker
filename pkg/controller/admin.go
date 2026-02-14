@@ -21,7 +21,6 @@ type AdminController interface {
 type adminController struct {
 	context            *container.Container
 	resetConfiguration func() error
-	appInfo            func() api.AppInfoResponse
 }
 
 type adminUserUpdateData struct {
@@ -32,8 +31,8 @@ type adminUserUpdateData struct {
 	Password string `json:"password,omitempty"`
 }
 
-func NewAdminController(c *container.Container, resetConfiguration func() error, appInfo func() api.AppInfoResponse) AdminController {
-	return &adminController{context: c, resetConfiguration: resetConfiguration, appInfo: appInfo}
+func NewAdminController(c *container.Container, resetConfiguration func() error) AdminController {
+	return &adminController{context: c, resetConfiguration: resetConfiguration}
 }
 
 // GetUsers returns all users (admin only)
@@ -207,8 +206,16 @@ func (ac *adminController) UpdateConfig(c echo.Context) error {
 		return renderApiError(c, http.StatusInternalServerError, err)
 	}
 
+	cfg := ac.context.GetConfig()
+	v := ac.context.GetVersion()
+
 	resp := api.Response[api.AppInfoResponse]{
-		Results: ac.appInfo(),
+		Results: api.AppInfoResponse{
+			Version:              v.PrettyVersion(),
+			VersionSha:           v.Sha,
+			RegistrationDisabled: cfg.RegistrationDisabled,
+			SocialsDisabled:      cfg.SocialsDisabled,
+		},
 	}
 
 	return c.JSON(http.StatusOK, resp)
