@@ -1,10 +1,62 @@
 package app
 
 import (
+	"github.com/jovandeginste/workout-tracker/v2/pkg/api"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/container"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/controller"
 	"github.com/labstack/echo/v4"
 )
+
+func (a *App) registerUserController(apiGroup *echo.Group) {
+	uc := controller.NewUserController(container.NewContainer(a.db))
+
+	apiGroup.GET("/whoami", uc.GetWhoami).Name = "api-v2-whoami"
+	apiGroup.GET("/totals", uc.GetTotals).Name = "api-v2-totals"
+	apiGroup.GET("/records", uc.GetRecords).Name = "api-v2-records"
+	apiGroup.GET("/records/climbs/ranking", uc.GetClimbRecordsRanking).Name = "api-v2-records-climbs-ranking"
+	apiGroup.GET("/records/ranking", uc.GetRecordsRanking).Name = "api-v2-records-ranking"
+	apiGroup.GET("/:id", uc.GetUserByID).Name = "api-v2-user-show"
+}
+
+func (a *App) registerStatisticsController(apiGroup *echo.Group) {
+	sc := controller.NewStatisticsController(container.NewContainer(a.db))
+
+	apiGroup.GET("/statistics", sc.GetStatistics).Name = "api-v2-statistics"
+}
+
+func (a *App) registerProfileController(apiGroup *echo.Group) {
+	pc := controller.NewProfileController(container.NewContainer(a.db), a.Version.Sha)
+
+	profileGroup := apiGroup.Group("/profile")
+	profileGroup.GET("", pc.GetProfile).Name = "api-v2-profile"
+	profileGroup.PUT("", pc.UpdateProfile).Name = "api-v2-profile-update"
+	profileGroup.POST("/reset-api-key", pc.ResetAPIKey).Name = "api-v2-profile-reset-api-key"
+	profileGroup.POST("/refresh-workouts", pc.RefreshWorkouts).Name = "api-v2-profile-refresh-workouts"
+	profileGroup.POST("/update-version", pc.UpdateVersion).Name = "api-v2-user-update-version"
+}
+
+func (a *App) registerAdminController(apiGroup *echo.Group) {
+	ac := controller.NewAdminController(
+		container.NewContainer(a.db),
+		a.ResetConfiguration,
+		func() api.AppInfoResponse {
+			return api.AppInfoResponse{
+				Version:              a.Version.PrettyVersion(),
+				RegistrationDisabled: a.Config.RegistrationDisabled,
+				SocialsDisabled:      a.Config.SocialsDisabled,
+			}
+		},
+	)
+
+	adminGroup := apiGroup.Group("/admin")
+	adminGroup.Use(a.ValidateAdminMiddleware)
+
+	adminGroup.GET("/users", ac.GetUsers).Name = "api-v2-admin-users"
+	adminGroup.GET("/users/:id", ac.GetUser).Name = "api-v2-admin-user"
+	adminGroup.PUT("/users/:id", ac.UpdateUser).Name = "api-v2-admin-user-update"
+	adminGroup.DELETE("/users/:id", ac.DeleteUser).Name = "api-v2-admin-user-delete"
+	adminGroup.PUT("/config", ac.UpdateConfig).Name = "api-v2-admin-config-update"
+}
 
 func (a *App) registerEquipmentController(apiGroup *echo.Group) {
 	ec := controller.NewEquipmentController(container.NewContainer(a.db))

@@ -198,15 +198,15 @@ func (a *App) apiV2Routes(e *echo.Group) {
 		},
 	}))
 
-	a.registerAPIV2UserRoutes(apiGroup)
+	a.registerUserController(apiGroup)
 	a.registerWorkoutController(apiGroup, apiGroupPublic)
 	a.registerHeatmapController(apiGroup)
 	a.registerRouteSegmentController(apiGroup)
 	a.registerMeasurementController(apiGroup)
 	a.registerEquipmentController(apiGroup)
-	a.registerAPIV2StatisticsRoutes(apiGroup)
-	a.registerAPIV2ProfileRoutes(apiGroup)
-	a.registerAPIV2AdminRoutes(apiGroup)
+	a.registerStatisticsController(apiGroup)
+	a.registerProfileController(apiGroup)
+	a.registerAdminController(apiGroup)
 
 	apiGroup.POST("/lookup-address", a.apiV2LookupAddressHandler).Name = "lookup-address"
 }
