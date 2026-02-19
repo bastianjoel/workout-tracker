@@ -7,6 +7,7 @@ export type UserProfile = {
   username: string;
   name: string;
   birthdate?: string;
+  activity_pub: boolean;
   active: boolean;
   admin: boolean;
   last_version: string;
@@ -53,6 +54,7 @@ export type FullUserProfile = {
   username: string;
   name: string;
   birthdate?: string;
+  activity_pub: boolean;
   active: boolean;
   admin: boolean;
   last_version: string;
@@ -85,4 +87,10 @@ export type ProfileUpdateRequest = {
 export type AppConfig = {
   registration_disabled: boolean;
   socials_disabled: boolean;
+};
+
+export type FollowRequest = {
+  id: number;
+  actor_iri: string;
+  created_at: string;
 };

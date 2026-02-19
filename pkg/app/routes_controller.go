@@ -5,6 +5,25 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func (a *App) registerActivityPubController(e *echo.Group) {
+	wfc := controller.NewWellKnownController(a.getContainer())
+	wellKnownGroup := e.Group("/.well-known")
+	wellKnownGroup.GET("/webfinger", wfc.WebFinger).Name = "webfinger"
+	wellKnownGroup.GET("/host-meta", wfc.HostMeta).Name = "host-meta"
+
+	auc := controller.NewApUserController(a.getContainer())
+	apGroup := e.Group("/ap")
+	apGroup.Use(a.RequestingActorMiddleware)
+	apGroup.GET("/users/:username", auc.GetUser).Name = "ap-user"
+	apGroup.POST("/users/:username/inbox", auc.Inbox).Name = "ap-user-inbox"
+	apGroup.GET("/users/:username/outbox", auc.Outbox).Name = "ap-user-outbox"
+	apGroup.GET("/users/:username/outbox/:id", auc.OutboxItem).Name = "ap-user-outbox-item"
+	apGroup.GET("/users/:username/outbox/:id/fit", auc.OutboxFit).Name = "ap-user-outbox-fit"
+	apGroup.GET("/users/:username/outbox/:id/route-image", auc.OutboxRouteImage).Name = "ap-user-outbox-route-image"
+	apGroup.GET("/users/:username/following", auc.Following).Name = "ap-user-following"
+	apGroup.GET("/users/:username/followers", auc.Followers).Name = "ap-user-followers"
+}
+
 func (a *App) registerUserController(apiGroup *echo.Group) {
 	uc := controller.NewUserController(a.getContainer())
 
@@ -38,6 +57,9 @@ func (a *App) registerProfileController(apiGroup *echo.Group) {
 	profileGroup.GET("", pc.GetProfile).Name = "profile"
 	profileGroup.PUT("", pc.UpdateProfile).Name = "profile-update"
 	profileGroup.POST("/reset-api-key", pc.ResetAPIKey).Name = "profile-reset-api-key"
+	profileGroup.POST("/enable-activity-pub", pc.EnableActivityPub).Name = "profile-enable-activity-pub"
+	profileGroup.GET("/follow-requests", pc.ListFollowRequests).Name = "profile-follow-requests"
+	profileGroup.POST("/follow-requests/:id/accept", pc.AcceptFollowRequest).Name = "profile-follow-request-accept"
 	profileGroup.POST("/refresh-workouts", pc.RefreshWorkouts).Name = "profile-refresh-workouts"
 	profileGroup.POST("/update-version", pc.UpdateVersion).Name = "user-update-version"
 }
@@ -83,6 +105,8 @@ func (a *App) registerWorkoutController(apiGroup *echo.Group, apiGroupPublic *ec
 	workoutGroup.PUT("/:id", wc.UpdateWorkout).Name = "workout-update"
 	workoutGroup.POST("/:id/toggle-lock", wc.ToggleWorkoutLock).Name = "workout-toggle-lock"
 	workoutGroup.POST("/:id/refresh", wc.RefreshWorkout).Name = "workout-refresh"
+	workoutGroup.POST("/:id/activity-pub/publish", wc.PublishWorkoutToActivityPub).Name = "workout-activity-pub-publish"
+	workoutGroup.DELETE("/:id/activity-pub/publish", wc.UnpublishWorkoutFromActivityPub).Name = "workout-activity-pub-unpublish"
 	workoutGroup.POST("/:id/share", wc.CreateWorkoutShare).Name = "workout-share"
 	workoutGroup.DELETE("/:id", wc.DeleteWorkout).Name = "workout-delete"
 	workoutGroup.DELETE("/:id/share", wc.DeleteWorkoutShare).Name = "workout-share-delete"
