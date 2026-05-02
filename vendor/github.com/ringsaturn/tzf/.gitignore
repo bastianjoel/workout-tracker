@@ -1,4 +1,9 @@
-data/*.json
-data/*.bin
+data/
 cmd/reducePolygon/reducePolygon
 cmd/tzjson2pb/tzjson2pb
+tmp/
+.claude/
+
+# benchmark results and coverage reports
+*.txt
+*.html
